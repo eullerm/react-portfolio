@@ -1,13 +1,15 @@
 import styled from "@emotion/styled";
 import Text from "../Text";
 import Contact from "../Contact";
-import Button from "../Button";
+import { Button, IconButton } from "../Button";
 import Select from "../Select";
 import { useSheets } from "../../context/GoogleSheetContext";
 import { useTheme } from "../../theme";
 import { t } from "../../translation/helper";
 import { useLanguage } from "../../translation/LanguageContext";
 import type { Language } from "../../translation/translations";
+import { AnimatePresence, motion } from "framer-motion";
+import Download from "../../assets/icons/download.svg?react";
 
 const Section = styled.section`
   display: flex;
@@ -61,9 +63,38 @@ const Header = () => {
   return (
     <Section>
       <Controls>
-        <Button variant="secondary" appearance="outlined" onClick={toggleTheme}>
-          {theme === "light" ? "☀️" : "🌙"}
-        </Button>
+        <IconButton
+          variant="secondary"
+          appearance="text"
+          onClick={toggleTheme}
+          style={{ position: "relative", width: "3rem", height: "3rem" }}
+        >
+          <AnimatePresence mode="sync" initial={false}>
+            {theme === "light" ? (
+              <motion.span
+                key="sun"
+                initial={{ opacity: 0, x: -20, y: 20, rotate: -90 }}
+                animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+                exit={{ opacity: 0, x: 20, y: 20, rotate: 90 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                style={{ position: "absolute" }}
+              >
+                ☀️
+              </motion.span>
+            ) : (
+              <motion.span
+                key="moon"
+                initial={{ opacity: 0, x: -20, y: 20, rotate: 90 }}
+                animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+                exit={{ opacity: 0, x: 20, y: 20, rotate: -90 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                style={{ position: "absolute" }}
+              >
+                🌙
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </IconButton>
 
         <Select
           value={language}
@@ -82,7 +113,7 @@ const Header = () => {
         </LeftInfo>
 
         <RightControls>
-          <Button variant="primary" appearance="contained">
+          <Button variant="primary" appearance="contained" icon={<Download />}>
             {t("resume", language)}
           </Button>
         </RightControls>

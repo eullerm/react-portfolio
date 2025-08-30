@@ -1,4 +1,21 @@
 export interface Theme {
+  primary?: {
+    color: string;
+    colorHover: string;
+    colorActive: string;
+    colorFocus: string;
+    colorText: string;
+    colorTextHover: string;
+  };
+  secondary?: {
+    color: string;
+    colorHover: string;
+    colorActive: string;
+    colorFocus: string;
+    colorText: string;
+    colorTextHover: string;
+  };
+
   textPrimary: string;
   textSecondary: string;
   textHelper: string;
@@ -17,6 +34,23 @@ export interface Theme {
 }
 
 export const lightTheme: Theme = {
+  primary: {
+    color: "#4589FF",
+    colorHover: "#0F62FE",
+    colorActive: "#0F62FE",
+    colorFocus: "#0F62FE",
+    colorText: "#FFFFFF",
+    colorTextHover: "#FFFFFF",
+  },
+  secondary: {
+    color: "#1d3557",
+    colorHover: "#16324a",
+    colorActive: "#16324a",
+    colorFocus: "#16324a",
+    colorText: "#FFFFFF",
+    colorTextHover: "#FFFFFF",
+  },
+
   textPrimary: "#1d1d1d",
   textSecondary: "#525252",
   textHelper: "#6f6f6f",
@@ -35,6 +69,23 @@ export const lightTheme: Theme = {
 };
 
 export const darkTheme: Theme = {
+  primary: {
+    color: "#4589FF",
+    colorHover: "#0F62FE",
+    colorActive: "#0F62FE",
+    colorFocus: "#0F62FE",
+    colorText: "#FFFFFF",
+    colorTextHover: "#FFFFFF",
+  },
+  secondary: {
+    color: "#1d3557",
+    colorHover: "#16324a",
+    colorActive: "#16324a",
+    colorFocus: "#16324a",
+    colorText: "#FFFFFF",
+    colorTextHover: "#FFFFFF",
+  },
+
   textPrimary: "#f4f4f4",
   textSecondary: "#c6c6c6",
   textHelper: "#a8a8a8",

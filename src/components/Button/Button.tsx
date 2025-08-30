@@ -7,56 +7,65 @@ type ButtonAppearance = "contained" | "outlined" | "text";
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   appearance?: ButtonAppearance;
+  icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
 }
 
-const colors = {
-  primary: "rgb(69, 137, 255)",
-  primaryHover: "rgb(15, 98, 254)",
-  secondary: "#1D3557",
-  secondaryHover: "#16324A",
-  text: "#000",
-};
-
 const StyledButton = styled.button<ButtonProps>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   font-family: "IBM Plex Sans", sans-serif;
   font-weight: 400;
   font-size: 1rem;
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.5s ease-in-out;
 
-  ${({ variant = "primary", appearance = "contained" }) => {
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: ${({ theme, variant = "primary" }) => theme[variant]?.colorText};
+  }
+  &:hover {
+    svg {
+      fill: ${({ theme, variant = "primary" }) =>
+        theme[variant]?.colorTextHover};
+    }
+  }
+
+  ${({ variant = "primary", appearance = "contained", theme }) => {
     switch (appearance) {
       case "contained":
         return `
-          background-color: ${colors[variant]};
+          background-color: ${theme[variant]?.color};
           color: #fff;
           border: none;
 
           &:hover {
-            background-color: ${variant === "primary" ? colors.primaryHover : colors.secondaryHover};
+            background-color: ${theme[variant]?.colorHover};
           }
         `;
       case "outlined":
         return `
           background-color: transparent;
-          color: ${colors[variant]};
-          border: 2px solid ${colors[variant]};
+          color: ${theme[variant]?.color};
+          border: 2px solid ${theme[variant]?.color};
 
           &:hover {
-            background-color: ${colors[variant]};
+            background-color: ${theme[variant]?.colorHover};
             color: #fff;
           }
         `;
       case "text":
         return `
           background-color: transparent;
-          color: ${colors[variant]};
+          color: ${theme[variant]};
           border: none;
 
           &:hover {
-            color: ${variant === "primary" ? colors.primaryHover : colors.secondaryHover};
+            background-color: ${theme[variant]?.colorHover};
           }
         `;
       default:
@@ -66,14 +75,16 @@ const StyledButton = styled.button<ButtonProps>`
 `;
 
 const Button: React.FC<ButtonProps> = ({
-  variant = "primary",
-  appearance = "contained",
   children,
+  icon,
+  iconPosition = "right",
   ...props
 }) => {
   return (
-    <StyledButton variant={variant} appearance={appearance} {...props}>
+    <StyledButton {...props}>
+      {icon && iconPosition === "left" && icon}
       {children}
+      {icon && iconPosition === "right" && icon}
     </StyledButton>
   );
 };

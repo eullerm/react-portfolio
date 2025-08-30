@@ -10,12 +10,12 @@ const Container = styled.div`
   width: 100vw;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease-in-out;
+  transition: all 0.5s ease-in-out;
   margin: 0 auto;
   padding: 0 1rem;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.textPrimary};
-  transition: all 0.3s ease-in-out;
+  transition: all 0.5s ease-in-out;
 `;
 
 const App: React.FC = () => {

@@ -6,6 +6,9 @@ export const translations = {
     language: "Idioma",
     select: "Selecione",
     about: "Sobre mim",
+    projects: "Projetos",
+    thanks: "Agradecimentos",
+    contact: "Contato",
   },
   english: {
     resume: "Resume",
@@ -14,6 +17,9 @@ export const translations = {
     language: "Language",
     select: "Select",
     about: "About me",
+    projects: "Projects",
+    thanks: "Thanks",
+    contact: "Contact",
   },
 };
 
