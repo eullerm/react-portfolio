@@ -17,6 +17,8 @@ const contacts = [
 const Section = styled.section`
   display: flex;
   flex-direction: column;
+  gap: 1rem;
+  padding: 0 2rem;
 `;
 
 const Links = styled.div`

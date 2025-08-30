@@ -1,13 +1,13 @@
-import {  SPREADSHEET_ID, token, WORKSHEETS } from "../config/googleSheets";
+import { SPREADSHEET_ID, token, WORKSHEETS } from "../config/googleSheets";
 
 async function fetchSheet(sheetName: string) {
-
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}`;
-  const res = await fetch(url, {headers: { Authorization: `Bearer ${token}` } });
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
   const data = await res.json();
   return data.values ?? [];
 }
-
 
 export const SheetsApi = {
   getAuthor: async (language: string) => {
@@ -30,7 +30,6 @@ export const SheetsApi = {
   },
 };
 
-
 function convertSheetToJson(data: any) {
   if (!Array.isArray(data) || data.length === 0) {
     throw new Error("Dados inválidos: esperado array de arrays");
@@ -39,7 +38,6 @@ function convertSheetToJson(data: any) {
   const [headers, ...rows] = data;
 
   if (!Array.isArray(headers)) {
-    console.log(headers);
     throw new Error("Cabeçalhos inválidos: esperado array");
   }
 

@@ -1,6 +1,5 @@
 import styled from "@emotion/styled";
 import Text from "../Text";
-import Contact from "../Contact";
 import { Button, IconButton } from "../Button";
 import Select from "../Select";
 import { useSheets } from "../../context/GoogleSheetContext";
@@ -15,7 +14,7 @@ const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 2rem;
+  padding: 0 2rem;
 `;
 
 const TopBar = styled.div`
@@ -69,13 +68,13 @@ const Header = () => {
           onClick={toggleTheme}
           style={{ position: "relative", width: "3rem", height: "3rem" }}
         >
-          <AnimatePresence mode="sync" initial={false}>
+          <AnimatePresence mode="popLayout" initial={false}>
             {theme === "light" ? (
               <motion.span
                 key="sun"
-                initial={{ opacity: 0, x: -20, y: 20, rotate: -90 }}
+                initial={{ opacity: 0, x: -34, y: 34, rotate: -90 }}
                 animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
-                exit={{ opacity: 0, x: 20, y: 20, rotate: 90 }}
+                exit={{ opacity: 0, x: 34, y: 34, rotate: 90 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 style={{ position: "absolute" }}
               >
@@ -84,9 +83,9 @@ const Header = () => {
             ) : (
               <motion.span
                 key="moon"
-                initial={{ opacity: 0, x: -20, y: 20, rotate: 90 }}
+                initial={{ opacity: 0, x: -34, y: 34, rotate: 90 }}
                 animate={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
-                exit={{ opacity: 0, x: 20, y: 20, rotate: -90 }}
+                exit={{ opacity: 0, x: 34, y: 34, rotate: -90 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
                 style={{ position: "absolute" }}
               >
@@ -127,8 +126,6 @@ const Header = () => {
           </Text>
         ))}
       </About>
-
-      <Contact />
     </Section>
   );
 };

@@ -9,6 +9,8 @@ export const translations = {
     projects: "Projetos",
     thanks: "Agradecimentos",
     contact: "Contato",
+    experience: "Experiência",
+    present: "Atualmente",
   },
   english: {
     resume: "Resume",
@@ -20,6 +22,8 @@ export const translations = {
     projects: "Projects",
     thanks: "Thanks",
     contact: "Contact",
+    experience: "Experience",
+    present: "Present",
   },
 };
 
