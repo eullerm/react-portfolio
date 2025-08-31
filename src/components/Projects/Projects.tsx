@@ -67,8 +67,7 @@ const Projects = () => {
             size={"md"}
             onClick={() =>
               window.open(
-                `${project.schema}://${project.host}${project.path}`,
-                "_blank",
+                `${project.scheme}://${project.host}${project.path}`,
                 "noopener,noreferrer"
               )
             }

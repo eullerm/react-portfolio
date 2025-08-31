@@ -1,6 +1,6 @@
 export type Project = {
-    name: string;
-    schema: string;
-    host: string;
-    path: string;
+  name: string;
+  scheme: string;
+  host: string;
+  path: string;
 };
