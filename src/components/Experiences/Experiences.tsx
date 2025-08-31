@@ -49,7 +49,6 @@ const ListOfDescription = styled.div`
 const Experiences = () => {
   const { isLoading, experiences } = useSheets();
   const { language } = useLanguage();
-  const theme = useTheme();
 
   if (isLoading) {
     return <div>Loading...</div>;
