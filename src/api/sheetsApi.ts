@@ -12,17 +12,26 @@ async function fetchSheet(sheetName: string) {
 export const SheetsApi = {
   getAuthor: async (language: string) => {
     const rows = await fetchSheet(WORKSHEETS.author);
-    return filterByLanguage(rows, language)[0];
+    const json = convertSheetToJson(rows);
+    return filterByLanguage(json, language)[0];
   },
   getExperiences: async (language: string) => {
     const rows = await fetchSheet(WORKSHEETS.experiences);
-    return filterByLanguage(rows, language);
+    const json = convertSheetToJson(rows);
+    return filterByLanguage(json, language);
   },
-  getSkills: async () => await fetchSheet(WORKSHEETS.skills),
-  getProjects: async () => await fetchSheet(WORKSHEETS.projects),
+  getSkills: async () => {
+    const rows = await fetchSheet(WORKSHEETS.skills);
+    return convertSheetToJson(rows);
+  },
+  getProjects: async () => {
+    const rows = await fetchSheet(WORKSHEETS.projects);
+    return convertSheetToJson(rows);
+  },
   getThanks: async (language: string) => {
     const rows = await fetchSheet(WORKSHEETS.thanks);
-    return filterByLanguage(rows, language);
+    const json = convertSheetToJson(rows);
+    return filterByLanguage(json, language);
   },
   getUpdatedAt: async () => {
     const rows = await fetchSheet(WORKSHEETS.updatedAt);
@@ -49,8 +58,6 @@ function convertSheetToJson(data: any) {
   );
 }
 
-function filterByLanguage(sheetData: any, language: string) {
-  const json = convertSheetToJson(sheetData);
-  console.log(json);
+function filterByLanguage(json: any, language: string) {
   return json.filter((item: any) => item.language === language);
 }

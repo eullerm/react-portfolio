@@ -28,16 +28,12 @@ const Links = styled.div`
 `;
 
 const Link = styled.a`
-  color: #61dafb;
   font-size: 1.2rem;
   text-decoration: none;
   svg {
     width: 2rem;
     height: 2rem;
     fill: ${({ theme }) => theme.textPrimary};
-  }
-  &:hover {
-    color: #fff;
   }
 `;
 

@@ -23,7 +23,6 @@ const Home: React.FC = () => {
       <Contact />
       <Experiences />
       <Projects />
-      <Contact />
     </Container>
   );
 };

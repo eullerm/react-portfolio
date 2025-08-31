@@ -3,6 +3,8 @@ import { useSheets } from "../../context/GoogleSheetContext";
 import { t } from "../../translation/helper";
 import Text from "../Text";
 import { useLanguage } from "../../translation/LanguageContext";
+import { useTheme } from "@emotion/react";
+import Button from "../Button";
 
 const Section = styled.section`
   display: flex;
@@ -47,6 +49,7 @@ const ListOfDescription = styled.div`
 const Experiences = () => {
   const { isLoading, experiences } = useSheets();
   const { language } = useLanguage();
+  const theme = useTheme();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -73,6 +76,17 @@ const Experiences = () => {
                   </Text>
                 ))}
               </ListOfDescription>
+              {exp.seeMore && (
+                <Button
+                  size={"xs"}
+                  appearance="text"
+                  variant="primary"
+                  onClick={() => console.log(exp.seeMore)}
+                  rel="noopener noreferrer"
+                >
+                  {t("seeMore", language)}
+                </Button>
+              )}
             </ExperienceDescription>
           </ExperienceItem>
         ))}

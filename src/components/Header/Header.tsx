@@ -112,7 +112,19 @@ const Header = () => {
         </LeftInfo>
 
         <RightControls>
-          <Button variant="primary" appearance="contained" icon={<Download />}>
+          <Button
+            variant="primary"
+            appearance="contained"
+            icon={<Download />}
+            onClick={() =>
+              window.open(
+                `https://drive.google.com${author?.cvPath}` || "#",
+                "_blank"
+              )
+            }
+            rel="noopener noreferrer"
+            size="sm"
+          >
             {t("resume", language)}
           </Button>
         </RightControls>

@@ -3,12 +3,20 @@ import styled from "@emotion/styled";
 
 type ButtonVariant = "primary" | "secondary";
 type ButtonAppearance = "contained" | "outlined" | "text";
+const sizeMap = {
+  xs: "1.5rem",
+  sm: "2rem",
+  md: "2.5rem",
+  lg: "3rem",
+  xl: "4rem",
+  xxl: "5rem",
+};
 
 interface IconButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   appearance?: ButtonAppearance;
-  size?: "small" | "medium" | "large";
+  size?: keyof typeof sizeMap;
 }
 
 const colors = {
@@ -19,25 +27,16 @@ const colors = {
   text: "#000",
 };
 
-const sizes = {
-  small: "2rem",
-  medium: "2.5rem",
-  large: "3rem",
-};
-
 const IconButton = styled.button<IconButtonProps>`
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.5s ease-in-out;
+  transition: all 0.2s ease-in-out;
   font-size: 1.25rem;
 
-  ${({ size = "medium" }) => `
-    width: ${sizes[size]};
-    height: ${sizes[size]};
-  `}
+  height: ${({ size = "md" }) => sizeMap[size]};
 
   ${({ variant = "primary", appearance = "contained" }) => {
     switch (appearance) {

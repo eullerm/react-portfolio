@@ -3,11 +3,20 @@ import styled from "@emotion/styled";
 
 type ButtonVariant = "primary" | "secondary";
 type ButtonAppearance = "contained" | "outlined" | "text";
+const sizeMap = {
+  xs: "1.5rem",
+  sm: "2rem",
+  md: "2.5rem",
+  lg: "3rem",
+  xl: "4rem",
+  xxl: "5rem",
+};
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   appearance?: ButtonAppearance;
   icon?: React.ReactNode;
+  size?: keyof typeof sizeMap;
   iconPosition?: "left" | "right";
 }
 
@@ -21,7 +30,8 @@ const StyledButton = styled.button<ButtonProps>`
   font-size: 1rem;
   padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: all 0.5s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  height: ${({ size = "md" }) => sizeMap[size]};
 
   svg {
     width: 1rem;
@@ -61,7 +71,7 @@ const StyledButton = styled.button<ButtonProps>`
       case "text":
         return `
           background-color: transparent;
-          color: ${theme[variant]};
+          color: ${theme[variant]?.colorText};
           border: none;
 
           &:hover {

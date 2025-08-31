@@ -11,6 +11,7 @@ export const translations = {
     contact: "Contato",
     experience: "Experiência",
     present: "Atualmente",
+    seeMore: "Ver mais",
   },
   english: {
     resume: "Resume",
@@ -24,6 +25,7 @@ export const translations = {
     contact: "Contact",
     experience: "Experience",
     present: "Present",
+    seeMore: "See more",
   },
 };
 
