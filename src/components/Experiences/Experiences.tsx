@@ -3,7 +3,6 @@ import { useSheets } from "../../context/GoogleSheetContext";
 import { t } from "../../translation/helper";
 import Text from "../Text";
 import { useLanguage } from "../../translation/LanguageContext";
-import { useTheme } from "@emotion/react";
 import Button from "../Button";
 
 const Section = styled.section`
