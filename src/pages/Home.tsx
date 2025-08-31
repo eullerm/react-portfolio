@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import Projects from "../components/Projects";
 import Contact from "../components/Contact";
 import Experiences from "../components/Experiences";
+import Skills from "../components/Skills";
 import styled from "@emotion/styled";
 
 const Container = styled.div`
@@ -23,6 +24,7 @@ const Home: React.FC = () => {
       <Contact />
       <Experiences />
       <Projects />
+      <Skills />
     </Container>
   );
 };

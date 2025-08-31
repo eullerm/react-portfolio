@@ -4,7 +4,7 @@ import { getAccessToken } from "../config/googleSheets";
 import type { Author } from "../models/author";
 import type { Experience } from "../models/experience";
 import type { Project } from "../models/projects";
-import type { Thanks } from "../models/skills";
+import type { Thanks } from "../models/thanks";
 import { useLanguage } from "../translation/LanguageContext";
 
 interface GoogleSheetContextType {

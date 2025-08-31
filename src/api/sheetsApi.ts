@@ -1,4 +1,6 @@
 import { SPREADSHEET_ID, token, WORKSHEETS } from "../config/googleSheets";
+import type { Experience } from "../models/experience";
+import { parseDate } from "../utils/parseDate";
 
 async function fetchSheet(sheetName: string) {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}`;
@@ -18,11 +20,25 @@ export const SheetsApi = {
   getExperiences: async (language: string) => {
     const rows = await fetchSheet(WORKSHEETS.experiences);
     const json = convertSheetToJson(rows);
-    return filterByLanguage(json, language);
+    console.log(filterByLanguage(json, language));
+    return filterByLanguage(json, language).sort(
+      (a: Experience, b: Experience) => {
+        // If 'a' is current and 'b' is not, 'a' comes first
+        if (a.endDate === null && b.endDate !== null) return -1;
+
+        // If 'b' is current and 'a' is not, 'b' comes first
+        if (b.endDate === null && a.endDate !== null) return 1;
+        const dateA = parseDate(a.startDate);
+        const dateB = parseDate(b.startDate);
+
+        return (dateB?.getTime() || 0) - (dateA?.getTime() || 0);
+      }
+    );
   },
   getSkills: async () => {
     const rows = await fetchSheet(WORKSHEETS.skills);
-    return convertSheetToJson(rows);
+    const flatted = rows.flat();
+    return flatted.slice(1); // Remove header
   },
   getProjects: async () => {
     const rows = await fetchSheet(WORKSHEETS.projects);
