@@ -16,7 +16,6 @@ const Container = styled.div`
   padding-bottom: 5rem;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.textPrimary};
-  transition: all 0.5s ease-in-out;
 `;
 
 const App: React.FC = () => {
