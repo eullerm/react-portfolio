@@ -9,7 +9,6 @@ const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0 2rem;
 `;
 
 const ListOfExperiences = styled.div`
@@ -28,7 +27,11 @@ const ExperienceTitle = styled.div`
   flex-direction: column;
   text-align: justify;
   gap: 0.5rem;
-  min-width: 10rem;
+
+  min-width: 5rem;
+  @media (min-width: 1024px) {
+    min-width: 10rem;
+  }
 `;
 
 const ExperienceDescription = styled.div`
@@ -66,10 +69,10 @@ const Experiences = () => {
               </Text>
             </ExperienceTitle>
             <ExperienceDescription>
-              <Text as="p">{exp.description}</Text>
+              <Text as="span">{exp.description}</Text>
               <ListOfDescription>
                 {exp.listOfDescription.split("\\n")?.map((item, idx) => (
-                  <Text as="p" key={idx}>
+                  <Text as="span" key={idx}>
                     {item}
                   </Text>
                 ))}

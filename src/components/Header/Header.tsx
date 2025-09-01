@@ -8,18 +8,19 @@ import { t } from "../../translation/helper";
 import { useLanguage } from "../../translation/LanguageContext";
 import type { Language } from "../../translation/translations";
 import { AnimatePresence, motion } from "framer-motion";
-import Download from "../../assets/icons/download.svg?react";
+import ArrowUpRight from "../../assets/icons/arrowUpRight.svg?react";
 
 const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0 2rem;
+  max-width: 100%;
 `;
 
 const TopBar = styled.div`
   display: flex;
   justify-content: space-between;
+  gap: 0.5rem;
   align-items: center;
 `;
 
@@ -44,6 +45,7 @@ const Controls = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
 `;
 
 const Header = () => {
@@ -115,7 +117,7 @@ const Header = () => {
           <Button
             variant="primary"
             appearance="contained"
-            icon={<Download />}
+            icon={<ArrowUpRight />}
             onClick={() =>
               window.open(
                 `https://drive.google.com${author?.cvPath}` || "#",
@@ -133,7 +135,7 @@ const Header = () => {
       <About>
         <Text as="h6">{t("about", language)}</Text>
         {author?.description.split("\\n").map((para: string, index: number) => (
-          <Text as="p" key={index}>
+          <Text as="span" key={index}>
             {para}
           </Text>
         ))}

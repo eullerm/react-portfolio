@@ -14,7 +14,6 @@ const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0 2rem;
 `;
 
 const Badges = styled.div`
@@ -37,7 +36,6 @@ const Badge = styled.div<{ size: keyof typeof sizeCardMap }>`
   border: 0.125rem solid ${({ theme }) => theme.textPrimary};
   color: ${({ theme }) => theme.textPrimary};
 
-  font-size: 0.875rem;
   font-weight: 500;
   line-height: 1;
 
@@ -58,7 +56,7 @@ const Skills = () => {
       <Badges>
         {skills.map((skill) => (
           <Badge aria-label={skill} key={skill} size={"md"}>
-            {skill}
+            <Text as="span">{skill}</Text>
           </Badge>
         ))}
       </Badges>

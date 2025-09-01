@@ -18,7 +18,7 @@ const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0 2rem;
+  max-width: 100%;
 `;
 
 const Links = styled.div`
@@ -28,7 +28,6 @@ const Links = styled.div`
 `;
 
 const Link = styled.a`
-  font-size: 1.2rem;
   text-decoration: none;
   svg {
     width: 2rem;
@@ -52,7 +51,7 @@ const Contact = () => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            {c.icon ? <c.icon /> : <Text as="p">{c.label}</Text>}
+            {c.icon ? <c.icon /> : <Text as="span">{c.label}</Text>}
           </Link>
         ))}
       </Links>

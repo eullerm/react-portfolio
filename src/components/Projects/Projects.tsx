@@ -15,7 +15,6 @@ const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0 2rem;
 `;
 
 const Links = styled.div`
@@ -23,7 +22,6 @@ const Links = styled.div`
   gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: space-between;
 `;
 
 const Card = styled.div<{ size: keyof typeof sizeCardMap }>`
@@ -38,7 +36,7 @@ const Card = styled.div<{ size: keyof typeof sizeCardMap }>`
   gap: 0.5rem;
   cursor: pointer;
   flex: 1 1 calc(33% - 1rem);
-  max-width: 33%;
+  min-width: fit-content;
   &:hover {
     background-color: ${({ theme }) => theme.primary?.color};
     color: ${({ theme }) => theme.primary?.colorText};
@@ -49,6 +47,10 @@ const Card = styled.div<{ size: keyof typeof sizeCardMap }>`
     width: 1rem;
     height: 1rem;
     fill: ${({ theme }) => theme.textPrimary};
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 33%;
   }
 `;
 

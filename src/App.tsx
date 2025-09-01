@@ -12,7 +12,8 @@ const Container = styled.div`
   flex-direction: column;
   transition: all 0.5s ease-in-out;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 1rem;
+  padding-bottom: 5rem;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.textPrimary};
   transition: all 0.5s ease-in-out;

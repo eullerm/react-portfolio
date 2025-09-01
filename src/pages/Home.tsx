@@ -7,13 +7,12 @@ import Skills from "../components/Skills";
 import styled from "@emotion/styled";
 
 const Container = styled.div`
-  min-height: 100vh;
-  width: 42rem;
+  width: 30rem;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   transition: all 0.5s ease-in-out;
   margin: 0 auto;
-  padding: 1rem;
   gap: 1rem;
 `;
 
