@@ -530,5 +530,4 @@ CEwHe3eNOfAYsBq1lEXOcYs+82125U/+boA92bUj+p2ldnDGaNlbOnvzH+vfhAFx
   padding-bottom: 5rem;
   background: ${({theme:r})=>r.background};
   color: ${({theme:r})=>r.textPrimary};
-  transition: all 0.5s ease-in-out;
 `,LE=()=>Ct.jsx(TS,{children:Ct.jsx(bS,{children:Ct.jsx(ES,{children:Ct.jsx(_E,{children:Ct.jsx(IE,{})})})})});W2.createRoot(document.getElementById("root")).render(Ct.jsx(bt.StrictMode,{children:Ct.jsx(LE,{})}));
