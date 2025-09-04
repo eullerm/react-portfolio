@@ -3,6 +3,7 @@ import { t } from "../../translation/helper";
 import { useLanguage } from "../../translation/LanguageContext";
 import { useSheets } from "../../context/GoogleSheetContext";
 import Text from "../Text";
+import Skeleton from "../Skeleton";
 
 const sizeCardMap = {
   sm: "2rem",
@@ -48,17 +49,31 @@ const Badge = styled.div<{ size: keyof typeof sizeCardMap }>`
 
 const Skills = () => {
   const { language } = useLanguage();
-  const { skills } = useSheets();
+  const { skills, isLoading } = useSheets();
 
   return (
     <Section>
       <Text as="h6">{t("skills", language)}</Text>
       <Badges>
-        {skills.map((skill) => (
-          <Badge aria-label={skill} key={skill} size={"md"}>
-            <Text as="span">{skill}</Text>
-          </Badge>
-        ))}
+        {isLoading
+          ? Array.from({ length: 10 }).map((_, index) => {
+              const randomMultiplier = (Math.random() * 2 + 2).toFixed(2);
+              return (
+                <Skeleton
+                  key={index}
+                  style={{
+                    width: `calc(${randomMultiplier} * ${sizeCardMap.md})`,
+                    borderRadius: "9999px",
+                    height: sizeCardMap.md,
+                  }}
+                />
+              );
+            })
+          : skills.map((skill) => (
+              <Badge aria-label={skill} key={skill} size={"md"}>
+                <Text as="span">{skill}</Text>
+              </Badge>
+            ))}
       </Badges>
     </Section>
   );

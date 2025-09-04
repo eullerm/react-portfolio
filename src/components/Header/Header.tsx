@@ -9,6 +9,7 @@ import { useLanguage } from "../../translation/LanguageContext";
 import type { Language } from "../../translation/translations";
 import { AnimatePresence, motion } from "framer-motion";
 import ArrowUpRight from "../../assets/icons/arrowUpRight.svg?react";
+import Skeleton from "../Skeleton";
 
 const Section = styled.section`
   display: flex;
@@ -32,6 +33,8 @@ const LeftInfo = styled.div`
 
 const RightControls = styled.div`
   display: flex;
+  flex: 1;
+  justify-content: flex-end;
   align-items: center;
   gap: 1rem;
 `;
@@ -56,10 +59,6 @@ const Header = () => {
     { value: "english", label: "English" },
     { value: "portuguese", label: "Português" },
   ];
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <Section>
@@ -108,37 +107,59 @@ const Header = () => {
       </Controls>
       <TopBar>
         <LeftInfo>
-          <Text as="h6">{author?.name}</Text>
-          <Text as="span">{author?.role}</Text>
-          <Text as="span">{author?.address}</Text>
+          {isLoading ? (
+            <>
+              <Skeleton style={{ width: "6rem", height: "1.5rem" }} />
+              <Skeleton style={{ width: "6.5rem", height: "1.5rem" }} />
+              <Skeleton style={{ width: "8rem", height: "1.5rem" }} />
+            </>
+          ) : (
+            <>
+              <Text as="h6">{author?.name}</Text>
+              <Text as="span">{author?.role}</Text>
+              <Text as="span">{author?.address}</Text>
+            </>
+          )}
         </LeftInfo>
 
         <RightControls>
-          <Button
-            variant="primary"
-            appearance="contained"
-            icon={<ArrowUpRight />}
-            onClick={() =>
-              window.open(
-                `https://drive.google.com${author?.cvPath}` || "#",
-                "_blank"
-              )
-            }
-            rel="noopener noreferrer"
-            size="sm"
-          >
-            {t("resume", language)}
-          </Button>
+          {isLoading ? (
+            <Skeleton style={{ width: "7rem", height: "2rem" }} />
+          ) : (
+            author?.cvPath && (
+              <Button
+                variant="primary"
+                appearance="contained"
+                icon={<ArrowUpRight />}
+                onClick={() =>
+                  window.open(
+                    `https://drive.google.com${author?.cvPath}` || "#",
+                    "_blank"
+                  )
+                }
+                rel="noopener noreferrer"
+                size="sm"
+              >
+                {t("resume", language)}
+              </Button>
+            )
+          )}
         </RightControls>
       </TopBar>
 
       <About>
         <Text as="h6">{t("about", language)}</Text>
-        {author?.description.split("\\n").map((para: string, index: number) => (
-          <Text as="span" key={index}>
-            {para}
-          </Text>
-        ))}
+        {isLoading ? (
+          <Skeleton style={{ width: "28rem", height: "10rem" }} />
+        ) : (
+          author?.description
+            .split("\\n")
+            .map((para: string, index: number) => (
+              <Text as="span" key={index}>
+                {para}
+              </Text>
+            ))
+        )}
       </About>
     </Section>
   );

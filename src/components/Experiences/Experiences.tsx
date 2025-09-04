@@ -4,6 +4,7 @@ import { t } from "../../translation/helper";
 import Text from "../Text";
 import { useLanguage } from "../../translation/LanguageContext";
 import Button from "../Button";
+import Skeleton from "../Skeleton";
 
 const Section = styled.section`
   display: flex;
@@ -52,45 +53,45 @@ const Experiences = () => {
   const { isLoading, experiences } = useSheets();
   const { language } = useLanguage();
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
     <Section>
       <Text as="h6">{t("experience", language)}</Text>
       <ListOfExperiences>
-        {experiences.map((exp, index) => (
-          <ExperienceItem key={index}>
-            <ExperienceTitle>
-              <Text as="h6">{exp.company}</Text>
-              <Text as="span">
-                {exp.startDate} - {exp.endDate ?? t("present", language)}
-              </Text>
-            </ExperienceTitle>
-            <ExperienceDescription>
-              <Text as="span">{exp.description}</Text>
-              <ListOfDescription>
-                {exp.listOfDescription.split("\\n")?.map((item, idx) => (
-                  <Text as="span" key={idx}>
-                    {item}
-                  </Text>
-                ))}
-              </ListOfDescription>
-              {exp.seeMore && (
-                <Button
-                  size={"xs"}
-                  appearance="text"
-                  variant="primary"
-                  onClick={() => console.log(exp.seeMore)}
-                  rel="noopener noreferrer"
-                >
-                  {t("seeMore", language)}
-                </Button>
-              )}
-            </ExperienceDescription>
-          </ExperienceItem>
-        ))}
+        {isLoading ? (
+          <Skeleton style={{ width: "100%", height: "10rem" }} />
+        ) : (
+          experiences.map((exp, index) => (
+            <ExperienceItem key={index}>
+              <ExperienceTitle>
+                <Text as="h6">{exp.company}</Text>
+                <Text as="span">
+                  {exp.startDate} - {exp.endDate ?? t("present", language)}
+                </Text>
+              </ExperienceTitle>
+              <ExperienceDescription>
+                <Text as="span">{exp.description}</Text>
+                <ListOfDescription>
+                  {exp.listOfDescription.split("\\n")?.map((item, idx) => (
+                    <Text as="span" key={idx}>
+                      {item}
+                    </Text>
+                  ))}
+                </ListOfDescription>
+                {exp.seeMore && (
+                  <Button
+                    size={"xs"}
+                    appearance="text"
+                    variant="primary"
+                    onClick={() => console.log(exp.seeMore)}
+                    rel="noopener noreferrer"
+                  >
+                    {t("seeMore", language)}
+                  </Button>
+                )}
+              </ExperienceDescription>
+            </ExperienceItem>
+          ))
+        )}
       </ListOfExperiences>
     </Section>
   );

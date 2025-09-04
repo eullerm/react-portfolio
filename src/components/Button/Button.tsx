@@ -3,7 +3,8 @@ import styled from "@emotion/styled";
 
 type ButtonVariant = "primary" | "secondary";
 type ButtonAppearance = "contained" | "outlined" | "text";
-const sizeMap = {
+
+export const sizeMap = {
   xs: "1.5rem",
   sm: "2rem",
   md: "2.5rem",

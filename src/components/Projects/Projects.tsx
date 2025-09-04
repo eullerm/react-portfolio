@@ -4,6 +4,7 @@ import { useLanguage } from "../../translation/LanguageContext";
 import { useSheets } from "../../context/GoogleSheetContext";
 import Text from "../Text";
 import ArrowUpRight from "../../assets/icons/arrowUpRight.svg?react";
+import Skeleton from "../Skeleton";
 
 const sizeCardMap = {
   sm: "2rem",
@@ -19,6 +20,7 @@ const Section = styled.section`
 
 const Links = styled.div`
   display: flex;
+  width: 100%;
   gap: 0.5rem;
   align-items: center;
   flex-wrap: wrap;
@@ -56,28 +58,40 @@ const Card = styled.div<{ size: keyof typeof sizeCardMap }>`
 
 const Projects = () => {
   const { language } = useLanguage();
-  const { projects } = useSheets();
+  const { projects, isLoading } = useSheets();
 
   return (
     <Section>
       <Text as="h6">{t("projects", language)}</Text>
       <Links>
-        {projects.map((project) => (
-          <Card
-            aria-label={project.name}
-            key={project.name}
-            size={"md"}
-            onClick={() =>
-              window.open(
-                `${project.scheme}://${project.host}${project.path}`,
-                "noopener,noreferrer"
-              )
-            }
-          >
-            {project.name}
-            <ArrowUpRight />
-          </Card>
-        ))}
+        {isLoading
+          ? [
+              { name: "1", scheme: "", host: "", path: "" },
+              { name: "2", scheme: "", host: "", path: "" },
+              { name: "3", scheme: "", host: "", path: "" },
+            ].map((project) => (
+              <Skeleton
+                key={project.name}
+                style={{ flex: "1 1 calc(33% - 1rem)", height: sizeCardMap.md }}
+              />
+            ))
+          : projects.map((project) => (
+              <Card
+                aria-label={project.name}
+                key={project.name}
+                size={"md"}
+                onClick={() => {
+                  if (isLoading) return;
+                  window.open(
+                    `${project.scheme}://${project.host}${project.path}`,
+                    "noopener,noreferrer"
+                  );
+                }}
+              >
+                {project.name}
+                <ArrowUpRight />
+              </Card>
+            ))}
       </Links>
     </Section>
   );

@@ -3,12 +3,23 @@ import type { Experience } from "../models/experience";
 import { parseDate } from "../utils/parseDate";
 
 async function fetchSheet(sheetName: string) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const data = await res.json();
-  return data.values ?? [];
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      throw new Error(
+        `Erro ${res.status}: Falha ao buscar planilha "${sheetName}"`
+      );
+    }
+
+    const data = await res.json();
+    return data.values ?? [[]];
+  } catch (e) {
+    throw e;
+  }
 }
 
 export const SheetsApi = {
@@ -20,7 +31,7 @@ export const SheetsApi = {
   getExperiences: async (language: string) => {
     const rows = await fetchSheet(WORKSHEETS.experiences);
     const json = convertSheetToJson(rows);
-    console.log(filterByLanguage(json, language));
+
     return filterByLanguage(json, language).sort(
       (a: Experience, b: Experience) => {
         // If 'a' is current and 'b' is not, 'a' comes first
