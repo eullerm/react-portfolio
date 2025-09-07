@@ -4,7 +4,7 @@ Este é o meu portfólio desenvolvido em **React + Vite**, com **Emotion** e ani
 
 ## 🚀 Demonstração
 
-[Acesse o portfólio aqui](https://eullerm.github.io/)
+[Acesse o portfólio aqui](https://eullerm.github.io/react-portfolio)
 
 ## ✨ Funcionalidades
 
@@ -31,7 +31,7 @@ This is my personal portfolio built with **React + Vite**, styled with **Emotion
 
 ## 🚀 Live Demo
 
-[Access the portfolio here](https://eullerm.github.io/)
+[Access the portfolio here](https://eullerm.github.io/react-portfolio)
 
 ## ✨ Features
 
