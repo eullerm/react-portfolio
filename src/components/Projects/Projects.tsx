@@ -52,7 +52,7 @@ const Card = styled.div<{ size: keyof typeof sizeCardMap }>`
   }
 
   @media (min-width: 1024px) {
-    max-width: 33%;
+    max-width: calc(33% - 1rem);
   }
 `;
 
