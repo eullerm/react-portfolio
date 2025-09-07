@@ -1,5 +1,6 @@
 import { SPREADSHEET_ID, token, WORKSHEETS } from "../config/googleSheets";
 import type { Experience } from "../models/experience";
+import { getErrorMessage } from "../utils/getErrorMessage";
 import { parseDate } from "../utils/parseDate";
 
 async function fetchSheet(sheetName: string) {
@@ -9,13 +10,12 @@ async function fetchSheet(sheetName: string) {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+    const data = await res.json();
+
     if (!res.ok) {
-      throw new Error(
-        `Erro ${res.status}: Falha ao buscar planilha "${sheetName}"`
-      );
+      throw new Error(getErrorMessage(data));
     }
 
-    const data = await res.json();
     return data.values ?? [[]];
   } catch (e) {
     throw e;

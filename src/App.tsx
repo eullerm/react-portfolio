@@ -1,9 +1,12 @@
 import React from "react";
-import Home from "./pages/Home";
+import styled from "@emotion/styled";
+import { ErrorBoundary } from "react-error-boundary";
 import { GoogleSheetProvider } from "./context/GoogleSheetContext";
 import { ThemeProvider } from "./theme";
 import { LanguageProvider } from "./translation/LanguageContext";
-import styled from "@emotion/styled";
+import { GoogleSheetErrorFallback } from "./components/GoogleSheetErrorFallback";
+import { RouterProvider } from "@tanstack/react-router";
+import { router } from "./router/routes";
 
 const Container = styled.div`
   min-height: 100vh;
@@ -22,11 +25,18 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <GoogleSheetProvider>
-          <Container>
-            <Home />
-          </Container>
-        </GoogleSheetProvider>
+        <Container>
+          <ErrorBoundary
+            FallbackComponent={GoogleSheetErrorFallback}
+            onReset={() => {
+              window.location.reload();
+            }}
+          >
+            <GoogleSheetProvider>
+              <RouterProvider router={router} />
+            </GoogleSheetProvider>
+          </ErrorBoundary>
+        </Container>
       </LanguageProvider>
     </ThemeProvider>
   );

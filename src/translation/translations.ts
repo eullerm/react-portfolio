@@ -13,6 +13,12 @@ export const translations = {
     present: "Atualmente",
     seeMore: "Ver mais",
     skills: "Habilidades",
+    retry: "Tentar novamente",
+    noAuth: "Sem autorização para acessar os dados.",
+    notFound: "Dados não encontrados.",
+    tooManyRequests:
+      "Excesso de requests.\nAguarde um minuto e tente novamente.",
+    unknown: "Ocorreu um erro inesperado.",
   },
   english: {
     resume: "Resume",
@@ -28,6 +34,11 @@ export const translations = {
     present: "Present",
     seeMore: "See more",
     skills: "Skills",
+    retry: "Retry",
+    noAuth: "Unauthorized access.",
+    notFound: "Data not found.",
+    tooManyRequests: "Too many requests.\nPlease wait a minute and try again.",
+    unknown: "An unexpected error occurred.",
   },
 };
 

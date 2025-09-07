@@ -6,6 +6,7 @@ import type { Experience } from "../models/experience";
 import type { Project } from "../models/projects";
 import type { Thanks } from "../models/thanks";
 import { useLanguage } from "../translation/LanguageContext";
+import { useErrorBoundary } from "react-error-boundary";
 
 interface GoogleSheetContextType {
   author: Author | null;
@@ -32,27 +33,33 @@ export const GoogleSheetProvider: React.FC<{ children: React.ReactNode }> = ({
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { language } = useLanguage();
+  const { showBoundary } = useErrorBoundary();
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
       await getAccessToken();
-      const [author, experiences, skills, projects, thanks, updatedAt] =
-        await Promise.all([
-          SheetsApi.getAuthor(language),
-          SheetsApi.getExperiences(language),
-          SheetsApi.getSkills(),
-          SheetsApi.getProjects(),
-          SheetsApi.getThanks(language),
-          SheetsApi.getUpdatedAt(),
-        ]);
-      setAuthor(author);
-      setExperiences(experiences);
-      setSkills(skills);
-      setProjects(projects);
-      setThanks(thanks);
-      setUpdatedAt(updatedAt);
-      setIsLoading(false);
+
+      try {
+        const [author, experiences, skills, projects, thanks, updatedAt] =
+          await Promise.all([
+            SheetsApi.getAuthor(language),
+            SheetsApi.getExperiences(language),
+            SheetsApi.getSkills(),
+            SheetsApi.getProjects(),
+            SheetsApi.getThanks(language),
+            SheetsApi.getUpdatedAt(),
+          ]);
+        setAuthor(author);
+        setExperiences(experiences);
+        setSkills(skills);
+        setProjects(projects);
+        setThanks(thanks);
+        setUpdatedAt(updatedAt);
+        setIsLoading(false);
+      } catch (e) {
+        showBoundary(e);
+      }
     };
     loadData();
   }, [language]);
