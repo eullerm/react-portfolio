@@ -109,9 +109,9 @@ const Header = () => {
         <LeftInfo>
           {isLoading ? (
             <>
-              <Skeleton style={{ width: "6rem", height: "1.25rem" }} />
-              <Skeleton style={{ width: "6.5rem", height: "1.25rem" }} />
-              <Skeleton style={{ width: "10rem", height: "1.25rem" }} />
+              <Skeleton style={{ width: "100px", height: "1.25rem" }} />
+              <Skeleton style={{ width: "160px", height: "1.25rem" }} />
+              <Skeleton style={{ width: "234px", height: "1.25rem" }} />
             </>
           ) : (
             <>
