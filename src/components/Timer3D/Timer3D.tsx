@@ -6,17 +6,13 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
-  function rotateLine(line: THREE.Object3D, angle: number) {
-    let rmatrix = new THREE.Matrix4().makeRotationAxis(
-      new THREE.Vector3(0, 0, 1),
-      angle
-    );
-
-    line.matrix.copy(new THREE.Matrix4().multiply(rmatrix));
-    line.matrixAutoUpdate = false;
-    line.matrixWorldNeedsUpdate = false;
-  }
-  function DiamondShape(maxSize: number, minSize: number) {
+  function DiamondShape({
+    maxSize,
+    minSize,
+  }: {
+    maxSize: number;
+    minSize: number;
+  }) {
     const x = 0,
       y = 0.5;
 
@@ -27,13 +23,81 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     diamondShape.lineTo(x - minSize, y); // Left
     diamondShape.lineTo(x, y + maxSize); // Back to the top
 
-    const geometry = new THREE.ShapeGeometry(diamondShape);
-    const material = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
+    const extrudeSettings = {
+      depth: 0.1,
+      bevelEnabled: false,
+    };
+    const geometry = new THREE.ExtrudeGeometry(diamondShape, extrudeSettings);
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0x0f62fe,
       side: THREE.FrontSide,
+      emissive: 0x0f62fe,
+      metalness: 0.5,
+      roughness: 0.15,
     });
     const mesh = new THREE.Mesh(geometry, material);
     return mesh;
+  }
+
+  function overTimer({
+    event,
+    torus,
+    controls,
+    renderer,
+    camera,
+  }: {
+    event: MouseEvent;
+    torus: THREE.Mesh;
+    controls: OrbitControls;
+    renderer: THREE.WebGLRenderer;
+    camera: THREE.PerspectiveCamera;
+  }) {
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const rect = renderer!.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObject(torus);
+
+    if (intersects.length > 0) {
+      renderer!.domElement.style.cursor = "pointer";
+      controls.enableRotate = true;
+    } else {
+      renderer!.domElement.style.cursor = "default";
+      controls.enableRotate = false;
+    }
+  }
+
+  function rotateTimer({
+    event,
+    torus,
+    controls,
+    renderer,
+    camera,
+  }: {
+    event: MouseEvent;
+    torus: THREE.Mesh;
+    controls: OrbitControls;
+    renderer: THREE.WebGLRenderer;
+    camera: THREE.PerspectiveCamera;
+  }) {
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const rect = renderer!.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObject(torus);
+
+    controls.enableRotate = intersects.length > 0;
   }
 
   useEffect(() => {
@@ -48,11 +112,30 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     camera.position.set(0, 0, 10);
     camera.lookAt(0, 0, 0);
 
+    // Light
+    // Main Light (Key) - luz azul IBM, lateral superior direita
+    const mainLight = new THREE.DirectionalLight(0x0f62fe, 1.2);
+    mainLight.position.set(5, 8, 10);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+
+    // Fill Light - luz neutra, bem fraca, para clarear sombras
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    fillLight.position.set(-5, -2, 5);
+    scene.add(fillLight);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
+    ambientLight.castShadow = true;
+
+    scene.add(ambientLight);
+
     let renderer = rendererRef.current;
     if (!renderer) {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(width, height);
       renderer.setClearColor(0x000000, 0);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       rendererRef.current = renderer;
     }
 
@@ -64,24 +147,43 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
 
     // Torus
     const torusGeometry = new THREE.TorusGeometry(radius, radius / 10, 32, 100);
-    const torusMaterial = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
+    const torusMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x424242,
+      emissive: 0x424242,
+      metalness: 0.5,
+      roughness: 0.15,
     });
     const torus = new THREE.Mesh(torusGeometry, torusMaterial);
     scene.add(torus);
 
     // Circle
     const circleGeometry = new THREE.CircleGeometry(radius, 32);
-    const circleMaterial = new THREE.MeshBasicMaterial({
+    const circleMaterial = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       side: THREE.DoubleSide,
     });
     const circle = new THREE.Mesh(circleGeometry, circleMaterial);
     scene.add(circle);
 
+    // Glass
+    const glassGeometry = new THREE.CircleGeometry(radius, 32);
+    const glassMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0xdddddd,
+      metalness: 0.2,
+      roughness: 0,
+      transmission: 0.9,
+      opacity: 0.5,
+      transparent: true,
+      side: THREE.DoubleSide,
+      clearcoat: 1,
+      clearcoatRoughness: 0,
+    });
+    const glass = new THREE.Mesh(glassGeometry, glassMaterial);
+    scene.add(glass);
+
     // Stick
-    const stickGeometry = new THREE.PlaneGeometry(0.2, radius / 8); //new THREE.CylinderGeometry(0.1, 0.1, radius / 10, 16);
-    const stickMaterial = new THREE.MeshBasicMaterial({
+    const stickGeometry = new THREE.BoxGeometry(0.2, radius / 8, 0.1);
+    const stickMaterial = new THREE.MeshStandardMaterial({
       color: 0x000000,
       side: THREE.FrontSide,
     });
@@ -116,30 +218,43 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     });
 
     //SecondLine
-    const pointer = DiamondShape(radius / 2, radius / 10);
-    pointer.position.set(0, 0, -0.5);
+    const pointer = DiamondShape({ maxSize: radius / 2, minSize: radius / 10 });
     scene.add(pointer);
-    const pointerCircleGeometry = new THREE.RingGeometry(
+
+    const pointerCircleGeometry = new THREE.TorusGeometry(
       radius / 20,
-      radius / 10,
+      0.1,
+      16,
       64
     );
-    const pointerCircleGeometryMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff0000,
-      side: THREE.FrontSide,
+    const pointerCircleMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x0f62fe,
+      emissive: 0x0f62fe,
+      metalness: 0.5,
+      roughness: 0.15,
     });
     const pointerCircle = new THREE.Mesh(
       pointerCircleGeometry,
-      pointerCircleGeometryMaterial
+      pointerCircleMaterial
     );
     scene.add(pointerCircle);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 0);
+    controls.enableZoom = true;
     controls.update();
+
+    // Positions
+    torus.position.z = -0.02;
+    circle.position.z = -0.1;
+    glass.position.z = 0.2;
+    sticks.forEach((s) => (s.position.z = 0.01));
+    pointer.position.z = pointer.position.z + 0.03;
+    pointerCircle.position.z = 0.03;
 
     // Animation
     let frameId: number;
+
     const animate = (time: number) => {
       controls.update();
       let elapsed = Math.floor(time / 1000);
@@ -148,9 +263,9 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       let currentSeconds = Math.max(seconds - elapsed, 0);
 
       let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
-      rotateLine(pointer, secondsAngle);
+      pointer.rotation.z = secondsAngle;
 
-      if (currentSeconds != 0) {
+      if (currentSeconds === 0) {
         const t = time / 1000;
 
         const cycle = Math.floor(t % 4);
@@ -161,7 +276,9 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
           const y = Math.cos(t * 35) * intensity;
           pointer.position.x = x;
           pointer.position.y = y;
-          /*  torus.position.x = x;
+          pointerCircle.position.x = x;
+          pointerCircle.position.y = y;
+          torus.position.x = x;
           torus.position.y = y;
           circle.position.x = x;
           circle.position.y = y;
@@ -171,7 +288,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
               Math.sin(angles[index]) * distOfSticks + y,
               0
             );
-          }); */
+          });
         } else {
           pointer.position.x = 0;
           pointer.position.y = 0;
@@ -195,12 +312,53 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     };
     frameId = requestAnimationFrame(animate);
 
+    renderer!.domElement.addEventListener("mousedown", (event) =>
+      rotateTimer({
+        event,
+        torus,
+        controls,
+        renderer,
+        camera,
+      })
+    );
+
+    renderer!.domElement.addEventListener("mousemove", (event) =>
+      overTimer({
+        event,
+        torus,
+        controls,
+        renderer,
+        camera,
+      })
+    );
+
     // Cleanup
     return () => {
       cancelAnimationFrame(frameId);
       renderer.dispose();
+      renderer!.domElement.removeEventListener("mousedown", (event) =>
+        rotateTimer({
+          event,
+          torus,
+          controls,
+          renderer,
+          camera,
+        })
+      );
+
+      renderer!.domElement.removeEventListener("mousemove", (event) =>
+        overTimer({
+          event,
+          torus,
+          controls,
+          renderer,
+          camera,
+        })
+      );
+
       scene.clear();
       controls.dispose();
+
       if (mountRef.current?.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement);
       }
@@ -212,7 +370,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       ref={mountRef}
       style={{
         width: "100%",
-        height: "400px",
+        height: "500px",
         background: "transparent",
       }}
     />
