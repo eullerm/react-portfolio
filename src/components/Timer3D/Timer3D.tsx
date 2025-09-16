@@ -16,20 +16,21 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     line.matrixAutoUpdate = false;
     line.matrixWorldNeedsUpdate = false;
   }
-  function DiamondShape() {
+  function DiamondShape(maxSize: number, minSize: number) {
     const x = 0,
       y = 0.5;
 
     const diamondShape = new THREE.Shape();
-    diamondShape.moveTo(x, y + 2.5); // Top
-    diamondShape.lineTo(x + 0.25, y); // Right
-    diamondShape.lineTo(x, y - 0.25); // Bottom
-    diamondShape.lineTo(x - 0.25, y); // Left
-    diamondShape.lineTo(x, y + 2.5); // Back to the top
+    diamondShape.moveTo(x, y + maxSize); // Top
+    diamondShape.lineTo(x + minSize, y); // Right
+    diamondShape.lineTo(x, y - minSize); // Bottom
+    diamondShape.lineTo(x - minSize, y); // Left
+    diamondShape.lineTo(x, y + maxSize); // Back to the top
 
     const geometry = new THREE.ShapeGeometry(diamondShape);
     const material = new THREE.MeshBasicMaterial({
       color: 0xff0000,
+      side: THREE.FrontSide,
     });
     const mesh = new THREE.Mesh(geometry, material);
     return mesh;
@@ -59,11 +60,13 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       mountRef.current.appendChild(renderer.domElement);
     }
 
-    const radius = 5; // Distance from the center
+    const radius = 4; // Distance from the center
 
     // Torus
-    const torusGeometry = new THREE.TorusGeometry(radius, 0.5, 32, 100);
-    const torusMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const torusGeometry = new THREE.TorusGeometry(radius, radius / 10, 32, 100);
+    const torusMaterial = new THREE.MeshBasicMaterial({
+      color: 0x00ff00,
+    });
     const torus = new THREE.Mesh(torusGeometry, torusMaterial);
     scene.add(torus);
 
@@ -77,8 +80,12 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     scene.add(circle);
 
     // Stick
-    const stickGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 16);
-    const stickMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const stickGeometry = new THREE.PlaneGeometry(0.2, radius / 8); //new THREE.CylinderGeometry(0.1, 0.1, radius / 10, 16);
+    const stickMaterial = new THREE.MeshBasicMaterial({
+      color: 0x000000,
+      side: THREE.FrontSide,
+    });
+    const sticks: THREE.Object3D[] = [];
 
     // Angles of the sticks
     const angles = [
@@ -91,22 +98,41 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       Math.PI, // 180°
       (3 * Math.PI) / 4, // 135°
     ];
+    const distOfSticks = radius - radius / 5;
 
     angles.forEach((angle) => {
-      const stick = new THREE.Mesh(stickGeometry, stickMaterial);
+      const s = new THREE.Mesh(stickGeometry, stickMaterial);
 
-      const dist = radius - 1.5;
-      stick.position.set(Math.cos(angle) * dist, Math.sin(angle) * dist, 0);
+      s.position.set(
+        Math.cos(angle) * distOfSticks,
+        Math.sin(angle) * distOfSticks,
+        0
+      );
 
-      stick.rotation.z = angle - Math.PI / 2;
+      s.rotation.z = angle - Math.PI / 2;
 
-      scene.add(stick);
+      sticks.push(s);
+      scene.add(s);
     });
 
     //SecondLine
-    const secondsLine = DiamondShape();
-    secondsLine.position.set(0, 0, -0.5);
-    scene.add(secondsLine);
+    const pointer = DiamondShape(radius / 2, radius / 10);
+    pointer.position.set(0, 0, -0.5);
+    scene.add(pointer);
+    const pointerCircleGeometry = new THREE.RingGeometry(
+      radius / 20,
+      radius / 10,
+      64
+    );
+    const pointerCircleGeometryMaterial = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      side: THREE.FrontSide,
+    });
+    const pointerCircle = new THREE.Mesh(
+      pointerCircleGeometry,
+      pointerCircleGeometryMaterial
+    );
+    scene.add(pointerCircle);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 0);
@@ -122,7 +148,46 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       let currentSeconds = Math.max(seconds - elapsed, 0);
 
       let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
-      rotateLine(secondsLine, secondsAngle);
+      rotateLine(pointer, secondsAngle);
+
+      if (currentSeconds != 0) {
+        const t = time / 1000;
+
+        const cycle = Math.floor(t % 4);
+
+        if (cycle < 2) {
+          const intensity = 0.1;
+          const x = Math.sin(t * 40) * intensity;
+          const y = Math.cos(t * 35) * intensity;
+          pointer.position.x = x;
+          pointer.position.y = y;
+          /*  torus.position.x = x;
+          torus.position.y = y;
+          circle.position.x = x;
+          circle.position.y = y;
+          sticks.forEach((stick, index) => {
+            stick.position.set(
+              Math.cos(angles[index]) * distOfSticks + x,
+              Math.sin(angles[index]) * distOfSticks + y,
+              0
+            );
+          }); */
+        } else {
+          pointer.position.x = 0;
+          pointer.position.y = 0;
+          torus.position.x = 0;
+          torus.position.y = 0;
+          circle.position.x = 0;
+          circle.position.y = 0;
+          sticks.forEach((stick, index) => {
+            stick.position.set(
+              Math.cos(angles[index]) * distOfSticks,
+              Math.sin(angles[index]) * distOfSticks,
+              0
+            );
+          });
+        }
+      }
 
       renderer.render(scene, camera);
 
