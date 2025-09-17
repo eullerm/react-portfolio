@@ -39,6 +39,33 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     return mesh;
   }
 
+  function updateNumberCanvas({
+    number,
+    numberCtx,
+    width,
+    height,
+  }: {
+    number: number;
+    numberCtx: CanvasRenderingContext2D;
+    width: number;
+    height: number;
+  }) {
+    numberCtx.fillStyle = "#111111";
+    numberCtx.fillRect(0, 0, width, height);
+
+    numberCtx.fillStyle = "#0f62fe";
+    numberCtx.font = 'bold 4rem "Orbitron", monospace';
+    numberCtx.textAlign = "center";
+    numberCtx.textBaseline = "middle";
+    numberCtx.fillText(
+      number.toString().padStart(2, "0"),
+      width / 2,
+      height / 2
+    );
+
+    return true;
+  }
+
   function overTimer({
     event,
     torus,
@@ -250,24 +277,6 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     numberCanvas.height = 64;
     const numberCtx = numberCanvas.getContext("2d")!;
 
-    function updateNumberCanvas(number: number) {
-      numberCtx.fillStyle = "#111111";
-      numberCtx.fillRect(0, 0, numberCanvas.width, numberCanvas.height);
-
-      numberCtx.fillStyle = "#0f62fe";
-      numberCtx.font = 'bold 4rem "Orbitron", monospace';
-      numberCtx.textAlign = "center";
-      numberCtx.textBaseline = "middle";
-      numberCtx.fillText(
-        number.toString().padStart(2, "0"),
-        numberCanvas.width / 2,
-        numberCanvas.height / 2
-      );
-
-      // 3️⃣ Atualiza a textura
-      numberTexture.needsUpdate = true;
-    }
-
     const numberTexture = new THREE.CanvasTexture(numberCanvas);
     const numberMaterial = new THREE.MeshBasicMaterial({
       map: numberTexture,
@@ -302,7 +311,12 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
 
       let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
       pointer.rotation.z = secondsAngle;
-      updateNumberCanvas(currentSeconds);
+      numberTexture.needsUpdate = updateNumberCanvas({
+        number: currentSeconds,
+        numberCtx,
+        width: numberCanvas.width,
+        height: numberCanvas.height,
+      });
 
       if (currentSeconds === 0) {
         const t = time / 1000;
