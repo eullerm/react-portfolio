@@ -125,7 +125,6 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     scene.add(fillLight);
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
-    ambientLight.castShadow = true;
 
     scene.add(ambientLight);
 
@@ -177,6 +176,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       side: THREE.DoubleSide,
       clearcoat: 1,
       clearcoatRoughness: 0,
+      depthWrite: false,
     });
     const glass = new THREE.Mesh(glassGeometry, glassMaterial);
     scene.add(glass);
@@ -244,13 +244,51 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     controls.enableZoom = true;
     controls.update();
 
+    // Number
+    const numberCanvas = document.createElement("canvas");
+    numberCanvas.width = 128;
+    numberCanvas.height = 64;
+    const numberCtx = numberCanvas.getContext("2d")!;
+
+    function updateNumberCanvas(number: number) {
+      numberCtx.fillStyle = "#111111";
+      numberCtx.fillRect(0, 0, numberCanvas.width, numberCanvas.height);
+
+      numberCtx.fillStyle = "#0f62fe";
+      numberCtx.font = 'bold 4rem "Orbitron", monospace';
+      numberCtx.textAlign = "center";
+      numberCtx.textBaseline = "middle";
+      numberCtx.fillText(
+        number.toString().padStart(2, "0"),
+        numberCanvas.width / 2,
+        numberCanvas.height / 2
+      );
+
+      // 3️⃣ Atualiza a textura
+      numberTexture.needsUpdate = true;
+    }
+
+    const numberTexture = new THREE.CanvasTexture(numberCanvas);
+    const numberMaterial = new THREE.MeshBasicMaterial({
+      map: numberTexture,
+      transparent: true,
+    });
+    const numberPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(radius / 3, radius / 6),
+      numberMaterial
+    );
+
+    numberPlane.position.set(radius / 3, radius / 4, 0);
+    scene.add(numberPlane);
+
     // Positions
     torus.position.z = -0.02;
     circle.position.z = -0.1;
     glass.position.z = 0.2;
     sticks.forEach((s) => (s.position.z = 0.01));
-    pointer.position.z = pointer.position.z + 0.03;
+    pointer.position.z = 0.03;
     pointerCircle.position.z = 0.03;
+    numberPlane.position.z = 0.02;
 
     // Animation
     let frameId: number;
@@ -264,6 +302,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
 
       let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
       pointer.rotation.z = secondsAngle;
+      updateNumberCanvas(currentSeconds);
 
       if (currentSeconds === 0) {
         const t = time / 1000;
@@ -289,6 +328,10 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
               0
             );
           });
+          numberPlane.position.x = x;
+          numberPlane.position.y = y;
+          numberPlane.position.x = radius / 3 + x;
+          numberPlane.position.y = radius / 4 + y;
         } else {
           pointer.position.x = 0;
           pointer.position.y = 0;
@@ -303,6 +346,8 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
               0
             );
           });
+          numberPlane.position.x = radius / 3;
+          numberPlane.position.y = radius / 4;
         }
       }
 
