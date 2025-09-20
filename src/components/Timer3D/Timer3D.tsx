@@ -242,7 +242,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     amplitude,
     duration,
     currentTime,
-    clickStart,
+    animationTime,
     initPositionX,
     initPositionY,
   }: {
@@ -250,11 +250,11 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     amplitude: number;
     duration: number;
     currentTime: number;
-    clickStart: number;
+    animationTime: number;
     initPositionX: number;
     initPositionY: number;
   }) {
-    const elapsed = (currentTime - clickStart) / 1000;
+    const elapsed = (currentTime - animationTime) / 1000;
     if (elapsed > duration) {
       button.position.set(initPositionX, initPositionY, button.position.z);
       return false;
@@ -527,20 +527,22 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     const pressDuration = 0.5; // Total time (go down and go up)
     const pressAmplitude = 0.2; // How much the button go down
     let isRunning = true;
+    let startTime = 0;
+    let pausedTime = 0;
     let clickStart: number | null = null;
 
     const animate = (time: number) => {
-      if (!isRunning) return;
-
       controls.update();
-
+      if (introAnimStart === null) {
+        introAnimStart = time + introDelay;
+      }
       if (clickStart) {
         const stillAnimating = clickButtonAnimation({
           button: startStopButton,
           amplitude: pressAmplitude,
           duration: pressDuration,
           currentTime: time,
-          clickStart,
+          animationTime: introAnimStart,
           initPositionX: startStopButtonPositionX,
           initPositionY: startStopButtonPositionY,
         });
@@ -550,9 +552,6 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         }
       }
 
-      if (introAnimStart === null) {
-        introAnimStart = time + introDelay;
-      }
       if (
         time > introAnimStart &&
         time < introAnimStart + pressDuration * 1000
@@ -562,21 +561,22 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
           amplitude: pressAmplitude,
           duration: pressDuration,
           currentTime: time,
-          clickStart: introAnimStart,
+          animationTime: introAnimStart,
           initPositionX: startStopButtonPositionX,
           initPositionY: startStopButtonPositionY,
         });
       } else if (time >= introAnimStart + pressDuration * 1000) {
-        isRunning = true;
         startStopButton.position.y = startStopButtonPositionY;
         startStopButton.position.x = startStopButtonPositionX;
 
-        let elapsed = Math.floor(
-          (time - (introAnimStart + pressDuration * 1000)) / 1000
-        );
+        let elapsed = pausedTime - introAnimStart - pressDuration * 1000;
+        if (isRunning) {
+          elapsed += time - startTime;
+        }
+        elapsed /= 1000;
 
         // Don't let the timer go below 0
-        let currentSeconds = Math.max(seconds - elapsed, 0);
+        let currentSeconds = Math.max(seconds - Math.floor(elapsed), 0);
 
         let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
         pointer.rotation.z = secondsAngle;
@@ -670,9 +670,9 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         clickStart = performance.now();
 
         if (isRunning) {
-          frameId = requestAnimationFrame(animate);
+          startTime = performance.now();
         } else {
-          cancelAnimationFrame(frameId);
+          pausedTime += performance.now() - startTime;
         }
       }
     });
