@@ -39,6 +39,18 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     return mesh;
   }
 
+  function recenterGroup(group: THREE.Group) {
+    const box = new THREE.Box3().setFromObject(group);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+
+    group.children.forEach((child) => {
+      child.position.sub(center);
+    });
+
+    group.position.add(center);
+  }
+
   function updateNumberCanvas({
     number,
     numberCtx,
@@ -69,13 +81,11 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
   function overTimer({
     event,
     torus,
-    controls,
     renderer,
     camera,
   }: {
     event: MouseEvent;
     torus: THREE.Mesh;
-    controls: OrbitControls;
     renderer: THREE.WebGLRenderer;
     camera: THREE.PerspectiveCamera;
   }) {
@@ -90,13 +100,32 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
 
     const intersects = raycaster.intersectObject(torus);
 
-    if (intersects.length > 0) {
-      renderer!.domElement.style.cursor = "pointer";
-      controls.enableRotate = true;
-    } else {
-      renderer!.domElement.style.cursor = "default";
-      controls.enableRotate = false;
-    }
+    return intersects.length > 0;
+  }
+
+  function overButtons({
+    event,
+    buttons,
+    renderer,
+    camera,
+  }: {
+    event: MouseEvent;
+    buttons: THREE.Object3D[];
+    renderer: THREE.WebGLRenderer;
+    camera: THREE.PerspectiveCamera;
+  }) {
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    const rect = renderer!.domElement.getBoundingClientRect();
+
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+
+    const intersects = raycaster.intersectObjects(buttons);
+
+    return intersects.length > 0;
   }
 
   function rotateTimer({
@@ -203,7 +232,51 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     buttonGroup.add(baseMesh);
     buttonGroup.castShadow = true;
 
+    recenterGroup(buttonGroup);
+
     return buttonGroup;
+  }
+
+  function clickButtonAnimation({
+    button,
+    amplitude,
+    duration,
+    currentTime,
+    clickStart,
+    initPositionX,
+    initPositionY,
+  }: {
+    button: THREE.Object3D;
+    amplitude: number;
+    duration: number;
+    currentTime: number;
+    clickStart: number;
+    initPositionX: number;
+    initPositionY: number;
+  }) {
+    const elapsed = (currentTime - clickStart) / 1000;
+    if (elapsed > duration) {
+      button.position.set(initPositionX, initPositionY, button.position.z);
+      return false;
+    }
+
+    const half = duration / 2;
+    let offset = 0;
+
+    if (elapsed < half) {
+      const p = elapsed / half;
+      offset = -p * amplitude;
+    } else {
+      const p = (elapsed - half) / half;
+      offset = -(1 - p) * amplitude;
+    }
+
+    button.position.set(
+      initPositionX + offset,
+      initPositionY + offset,
+      button.position.z
+    );
+    return true;
   }
 
   useEffect(() => {
@@ -387,71 +460,95 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     // Animation
     let frameId: number;
 
-    // Start Button
-    const startButtonWidth = 1.2;
-    const startButtonHeight = 0.6;
-    const startButtonRadius = 0.1;
-    const startButtonBaseHeight = 0.9;
-    const startButton = createButton({
-      width: startButtonWidth,
-      height: startButtonHeight,
-      radius: startButtonRadius,
-      baseHeight: startButtonBaseHeight,
+    // Start/Stop Button
+    const startStopButtonWidth = 1.2;
+    const startStopButtonHeight = 0.6;
+    const startStopButtonRadius = 0.1;
+    const startStopButtonBaseHeight = 0.9;
+    const startStopButton = createButton({
+      width: startStopButtonWidth,
+      height: startStopButtonHeight,
+      radius: startStopButtonRadius,
+      baseHeight: startStopButtonBaseHeight,
     });
-    startButton.rotation.z = -Math.PI / 4;
-    const startButtonPositionX =
-      radius * Math.cos(Math.PI / 4) + startButtonBaseHeight;
-    const startButtonPositionY =
-      radius * Math.sin(Math.PI / 4) + startButtonBaseHeight;
-    startButton.position.set(startButtonPositionX, startButtonPositionY, 0);
-    scene.add(startButton);
-
-    // Stop Button
-    const stopButtonWidth = 1.5;
-    const stopButtonHeight = 0.6;
-    const stopButtonRadius = 0.1;
-    const stopButtonBaseHeight = 1;
-    const stopButton = createButton({
-      width: stopButtonWidth,
-      height: stopButtonHeight,
-      radius: stopButtonRadius,
-      baseHeight: stopButtonBaseHeight,
-    });
-    const stopButtonPositionY =
-      radius + startButtonBaseHeight + stopButtonHeight;
-    stopButton.position.set(0, stopButtonPositionY, 0);
-    scene.add(stopButton);
-
-    // Special Button
-    const specialButtonWidth = 1.2;
-    const specialButtonHeight = 0.6;
-    const specialButtonRadius = 0.1;
-    const specialButtonBaseHeight = 0.9;
-    const specialButton = createButton({
-      width: specialButtonWidth,
-      height: specialButtonHeight,
-      radius: specialButtonRadius,
-      baseHeight: specialButtonBaseHeight,
-    });
-    specialButton.rotation.z = Math.PI / 4;
-    const specialButtonPositionX =
-      radius * Math.sin(Math.PI / 4) + specialButtonBaseHeight;
-    const specialButtonPositionY =
-      radius * Math.cos(Math.PI / 4) + specialButtonBaseHeight;
-    specialButton.position.set(
-      -specialButtonPositionX,
-      specialButtonPositionY,
+    startStopButton.rotation.z = -Math.PI / 4;
+    const startStopButtonPositionX =
+      radius * Math.cos(Math.PI / 4) +
+      (startStopButtonBaseHeight + startStopButtonHeight) / 2;
+    const startStopButtonPositionY =
+      radius * Math.sin(Math.PI / 4) +
+      (startStopButtonBaseHeight + startStopButtonHeight) / 2;
+    startStopButton.position.set(
+      startStopButtonPositionX,
+      startStopButtonPositionY,
       0
     );
-    scene.add(specialButton);
+    scene.add(startStopButton);
+
+    // Switch Button
+    const switchModeButtonWidth = 1.5;
+    const switchModeButtonHeight = 0.6;
+    const switchModeButtonRadius = 0.1;
+    const switchModeButtonBaseHeight = 1.2;
+    const switchModeButton = createButton({
+      width: switchModeButtonWidth,
+      height: switchModeButtonHeight,
+      radius: switchModeButtonRadius,
+      baseHeight: switchModeButtonBaseHeight,
+    });
+    const switchModeButtonPositionY =
+      radius + (switchModeButtonBaseHeight + switchModeButtonHeight) / 2;
+    switchModeButton.position.set(0, switchModeButtonPositionY, 0);
+    scene.add(switchModeButton);
+
+    // Special Button
+    const resetButtonWidth = 1.2;
+    const resetButtonHeight = 0.6;
+    const resetButtonRadius = 0.1;
+    const resetButtonBaseHeight = 0.9;
+    const resetButton = createButton({
+      width: resetButtonWidth,
+      height: resetButtonHeight,
+      radius: resetButtonRadius,
+      baseHeight: resetButtonBaseHeight,
+    });
+    resetButton.rotation.z = Math.PI / 4;
+    const resetButtonPositionX =
+      radius * Math.sin(Math.PI / 4) +
+      (resetButtonBaseHeight + resetButtonHeight) / 2;
+    const resetButtonPositionY =
+      radius * Math.cos(Math.PI / 4) +
+      (resetButtonBaseHeight + resetButtonHeight) / 2;
+    resetButton.position.set(-resetButtonPositionX, resetButtonPositionY, 0);
+    scene.add(resetButton);
 
     let introAnimStart: number | null = null;
     const introDelay = 2000; // Seconds delay
     const pressDuration = 0.5; // Total time (go down and go up)
     const pressAmplitude = 0.2; // How much the button go down
+    let isRunning = true;
+    let clickStart: number | null = null;
 
     const animate = (time: number) => {
+      if (!isRunning) return;
+
       controls.update();
+
+      if (clickStart) {
+        const stillAnimating = clickButtonAnimation({
+          button: startStopButton,
+          amplitude: pressAmplitude,
+          duration: pressDuration,
+          currentTime: time,
+          clickStart,
+          initPositionX: startStopButtonPositionX,
+          initPositionY: startStopButtonPositionY,
+        });
+
+        if (!stillAnimating) {
+          clickStart = null;
+        }
+      }
 
       if (introAnimStart === null) {
         introAnimStart = time + introDelay;
@@ -460,23 +557,19 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         time > introAnimStart &&
         time < introAnimStart + pressDuration * 1000
       ) {
-        const tAnim = (time - introAnimStart) / 1000;
-        const half = pressDuration / 2;
-        let offset = 0;
-
-        if (tAnim < half) {
-          const p = tAnim / half;
-          offset = -p * pressAmplitude;
-        } else {
-          const p = (tAnim - half) / half;
-          offset = -(1 - p) * pressAmplitude;
-        }
-
-        startButton.position.y = startButtonPositionY + offset;
-        startButton.position.x = startButtonPositionX + offset;
+        clickButtonAnimation({
+          button: startStopButton,
+          amplitude: pressAmplitude,
+          duration: pressDuration,
+          currentTime: time,
+          clickStart: introAnimStart,
+          initPositionX: startStopButtonPositionX,
+          initPositionY: startStopButtonPositionY,
+        });
       } else if (time >= introAnimStart + pressDuration * 1000) {
-        startButton.position.y = startButtonPositionY;
-        startButton.position.x = startButtonPositionX;
+        isRunning = true;
+        startStopButton.position.y = startStopButtonPositionY;
+        startStopButton.position.x = startStopButtonPositionX;
 
         let elapsed = Math.floor(
           (time - (introAnimStart + pressDuration * 1000)) / 1000
@@ -522,8 +615,12 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
             numberPlane.position.y = y;
             numberPlane.position.x = radius / 3 + x;
             numberPlane.position.y = radius / 4 + y;
-            startButton.position.y = startButtonPositionY + y;
-            startButton.position.x = startButtonPositionX + x;
+            startStopButton.position.y = startStopButtonPositionY + y;
+            startStopButton.position.x = startStopButtonPositionX + x;
+            switchModeButton.position.y = switchModeButtonPositionY + y;
+            switchModeButton.position.x = x;
+            resetButton.position.y = resetButtonPositionY + y;
+            resetButton.position.x = -resetButtonPositionX + x;
           } else {
             pointer.position.x = 0;
             pointer.position.y = 0;
@@ -540,6 +637,12 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
             });
             numberPlane.position.x = radius / 3;
             numberPlane.position.y = radius / 4;
+            startStopButton.position.y = startStopButtonPositionY;
+            startStopButton.position.x = startStopButtonPositionX;
+            switchModeButton.position.y = switchModeButtonPositionY;
+            switchModeButton.position.x = 0;
+            resetButton.position.y = resetButtonPositionY;
+            resetButton.position.x = -resetButtonPositionX;
           }
         }
       }
@@ -559,10 +662,18 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects([stopButton]);
+      const intersects = raycaster.intersectObjects([startStopButton]);
 
       if (intersects.length > 0) {
-        console.log("Start button clicked!");
+        isRunning = !isRunning;
+
+        clickStart = performance.now();
+
+        if (isRunning) {
+          frameId = requestAnimationFrame(animate);
+        } else {
+          cancelAnimationFrame(frameId);
+        }
       }
     });
 
@@ -576,32 +687,65 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       })
     );
 
-    renderer!.domElement.addEventListener("mousemove", (event) =>
-      overTimer({
+    renderer!.domElement.addEventListener("mousemove", (event) => {
+      const isOverButton = overButtons({
         event,
-        torus,
-        controls,
+        buttons: [resetButton, switchModeButton, startStopButton],
         renderer,
         camera,
-      })
-    );
+      });
+
+      const isOverTimer = overTimer({
+        event,
+        torus,
+        renderer,
+        camera,
+      });
+
+      if (isOverButton) {
+        renderer!.domElement.style.cursor = "pointer";
+      } else if (isOverTimer) {
+        renderer!.domElement.style.cursor = "pointer";
+        controls.enableRotate = true;
+      } else {
+        renderer!.domElement.style.cursor = "default";
+        controls.enableRotate = false;
+      }
+    });
 
     // Cleanup
     return () => {
       cancelAnimationFrame(frameId);
       renderer.dispose();
-      renderer!.domElement.removeEventListener("mousedown", (event) =>
-        rotateTimer({
+
+      renderer!.domElement.removeEventListener("mousemove", (event) => {
+        const isOverButton = overButtons({
           event,
-          torus,
-          controls,
+          buttons: [resetButton, switchModeButton, startStopButton],
           renderer,
           camera,
-        })
-      );
+        });
 
-      renderer!.domElement.removeEventListener("mousemove", (event) =>
-        overTimer({
+        const isOverTimer = overTimer({
+          event,
+          torus,
+          renderer,
+          camera,
+        });
+
+        if (isOverButton) {
+          renderer!.domElement.style.cursor = "pointer";
+        } else if (isOverTimer) {
+          renderer!.domElement.style.cursor = "pointer";
+          controls.enableRotate = true;
+        } else {
+          renderer!.domElement.style.cursor = "default";
+          controls.enableRotate = false;
+        }
+      });
+
+      renderer!.domElement.removeEventListener("mousedown", (event) =>
+        rotateTimer({
           event,
           torus,
           controls,
