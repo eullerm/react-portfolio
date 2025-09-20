@@ -127,6 +127,85 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     controls.enableRotate = intersects.length > 0;
   }
 
+  function createButton({
+    width = 1.2,
+    height = 0.6,
+    radius = 0.1,
+    baseHeight = 0.8,
+  }: {
+    width?: number;
+    height?: number;
+    radius?: number;
+    baseHeight?: number;
+  }) {
+    const buttonGroup = new THREE.Group();
+
+    const mainShape = new THREE.Shape();
+
+    mainShape.moveTo(-width / 2 + radius, -height / 2);
+    mainShape.lineTo(width / 2 - radius, -height / 2);
+    mainShape.quadraticCurveTo(
+      width / 2,
+      -height / 2,
+      width / 2,
+      -height / 2 + radius
+    );
+    mainShape.lineTo(width / 2, height / 2 - radius);
+    mainShape.quadraticCurveTo(
+      width / 2,
+      height / 2,
+      width / 2 - radius,
+      height / 2
+    );
+    mainShape.lineTo(-width / 2 + radius, height / 2);
+    mainShape.quadraticCurveTo(
+      -width / 2,
+      height / 2,
+      -width / 2,
+      height / 2 - radius
+    );
+    mainShape.lineTo(-width / 2, -height / 2 + radius);
+    mainShape.quadraticCurveTo(
+      -width / 2,
+      -height / 2,
+      -width / 2 + radius,
+      -height / 2
+    );
+
+    const extrudeSettings = {
+      depth: 0.5,
+      bevelEnabled: true,
+      bevelSize: 0.05,
+      bevelThickness: 0.05,
+    };
+    const geometry = new THREE.ExtrudeGeometry(mainShape, extrudeSettings);
+    geometry.center();
+    const material = new THREE.MeshPhysicalMaterial({
+      color: 0x424242,
+      emissive: 0x424242,
+      metalness: 0.5,
+      roughness: 0.15,
+    });
+    const mainButton = new THREE.Mesh(geometry, material);
+    mainButton.castShadow = true;
+    mainButton.receiveShadow = true;
+    buttonGroup.add(mainButton);
+
+    const baseGeometry = new THREE.BoxGeometry(0.5, baseHeight, 0.15);
+    const baseMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x393939,
+      emissive: 0x393939,
+      metalness: 0.5,
+      roughness: 0.15,
+    });
+    const baseMesh = new THREE.Mesh(baseGeometry, baseMaterial);
+    baseMesh.position.y = -height;
+    buttonGroup.add(baseMesh);
+    buttonGroup.castShadow = true;
+
+    return buttonGroup;
+  }
+
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -278,6 +357,12 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     const numberCtx = numberCanvas.getContext("2d")!;
 
     const numberTexture = new THREE.CanvasTexture(numberCanvas);
+    numberTexture.needsUpdate = updateNumberCanvas({
+      number: 0,
+      numberCtx,
+      width: numberCanvas.width,
+      height: numberCanvas.height,
+    });
     const numberMaterial = new THREE.MeshBasicMaterial({
       map: numberTexture,
       transparent: true,
@@ -302,66 +387,160 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     // Animation
     let frameId: number;
 
+    // Start Button
+    const startButtonWidth = 1.2;
+    const startButtonHeight = 0.6;
+    const startButtonRadius = 0.1;
+    const startButtonBaseHeight = 0.9;
+    const startButton = createButton({
+      width: startButtonWidth,
+      height: startButtonHeight,
+      radius: startButtonRadius,
+      baseHeight: startButtonBaseHeight,
+    });
+    startButton.rotation.z = -Math.PI / 4;
+    const startButtonPositionX =
+      radius * Math.cos(Math.PI / 4) + startButtonBaseHeight;
+    const startButtonPositionY =
+      radius * Math.sin(Math.PI / 4) + startButtonBaseHeight;
+    startButton.position.set(startButtonPositionX, startButtonPositionY, 0);
+    scene.add(startButton);
+
+    // Stop Button
+    const stopButtonWidth = 1.5;
+    const stopButtonHeight = 0.6;
+    const stopButtonRadius = 0.1;
+    const stopButtonBaseHeight = 1;
+    const stopButton = createButton({
+      width: stopButtonWidth,
+      height: stopButtonHeight,
+      radius: stopButtonRadius,
+      baseHeight: stopButtonBaseHeight,
+    });
+    const stopButtonPositionY =
+      radius + startButtonBaseHeight + stopButtonHeight;
+    stopButton.position.set(0, stopButtonPositionY, 0);
+    scene.add(stopButton);
+
+    // Special Button
+    const specialButtonWidth = 1.2;
+    const specialButtonHeight = 0.6;
+    const specialButtonRadius = 0.1;
+    const specialButtonBaseHeight = 0.9;
+    const specialButton = createButton({
+      width: specialButtonWidth,
+      height: specialButtonHeight,
+      radius: specialButtonRadius,
+      baseHeight: specialButtonBaseHeight,
+    });
+    specialButton.rotation.z = Math.PI / 4;
+    const specialButtonPositionX =
+      radius * Math.sin(Math.PI / 4) + specialButtonBaseHeight;
+    const specialButtonPositionY =
+      radius * Math.cos(Math.PI / 4) + specialButtonBaseHeight;
+    specialButton.position.set(
+      -specialButtonPositionX,
+      specialButtonPositionY,
+      0
+    );
+    scene.add(specialButton);
+
+    let introAnimStart: number | null = null;
+    const introDelay = 2000; // Seconds delay
+    const pressDuration = 0.5; // Total time (go down and go up)
+    const pressAmplitude = 0.2; // How much the button go down
+
     const animate = (time: number) => {
       controls.update();
-      let elapsed = Math.floor(time / 1000);
 
-      // Don't let the timer go below 0
-      let currentSeconds = Math.max(seconds - elapsed, 0);
+      if (introAnimStart === null) {
+        introAnimStart = time + introDelay;
+      }
+      if (
+        time > introAnimStart &&
+        time < introAnimStart + pressDuration * 1000
+      ) {
+        const tAnim = (time - introAnimStart) / 1000;
+        const half = pressDuration / 2;
+        let offset = 0;
 
-      let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
-      pointer.rotation.z = secondsAngle;
-      numberTexture.needsUpdate = updateNumberCanvas({
-        number: currentSeconds,
-        numberCtx,
-        width: numberCanvas.width,
-        height: numberCanvas.height,
-      });
-
-      if (currentSeconds === 0) {
-        const t = time / 1000;
-
-        const cycle = Math.floor(t % 4);
-
-        if (cycle < 2) {
-          const intensity = 0.1;
-          const x = Math.sin(t * 40) * intensity;
-          const y = Math.cos(t * 35) * intensity;
-          pointer.position.x = x;
-          pointer.position.y = y;
-          pointerCircle.position.x = x;
-          pointerCircle.position.y = y;
-          torus.position.x = x;
-          torus.position.y = y;
-          circle.position.x = x;
-          circle.position.y = y;
-          sticks.forEach((stick, index) => {
-            stick.position.set(
-              Math.cos(angles[index]) * distOfSticks + x,
-              Math.sin(angles[index]) * distOfSticks + y,
-              0
-            );
-          });
-          numberPlane.position.x = x;
-          numberPlane.position.y = y;
-          numberPlane.position.x = radius / 3 + x;
-          numberPlane.position.y = radius / 4 + y;
+        if (tAnim < half) {
+          const p = tAnim / half;
+          offset = -p * pressAmplitude;
         } else {
-          pointer.position.x = 0;
-          pointer.position.y = 0;
-          torus.position.x = 0;
-          torus.position.y = 0;
-          circle.position.x = 0;
-          circle.position.y = 0;
-          sticks.forEach((stick, index) => {
-            stick.position.set(
-              Math.cos(angles[index]) * distOfSticks,
-              Math.sin(angles[index]) * distOfSticks,
-              0
-            );
-          });
-          numberPlane.position.x = radius / 3;
-          numberPlane.position.y = radius / 4;
+          const p = (tAnim - half) / half;
+          offset = -(1 - p) * pressAmplitude;
+        }
+
+        startButton.position.y = startButtonPositionY + offset;
+        startButton.position.x = startButtonPositionX + offset;
+      } else if (time >= introAnimStart + pressDuration * 1000) {
+        startButton.position.y = startButtonPositionY;
+        startButton.position.x = startButtonPositionX;
+
+        let elapsed = Math.floor(
+          (time - (introAnimStart + pressDuration * 1000)) / 1000
+        );
+
+        // Don't let the timer go below 0
+        let currentSeconds = Math.max(seconds - elapsed, 0);
+
+        let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
+        pointer.rotation.z = secondsAngle;
+        numberTexture.needsUpdate = updateNumberCanvas({
+          number: currentSeconds,
+          numberCtx,
+          width: numberCanvas.width,
+          height: numberCanvas.height,
+        });
+
+        if (currentSeconds === 0) {
+          const t = time / 1000;
+
+          const cycle = Math.floor(t % 4);
+
+          if (cycle < 2) {
+            const intensity = 0.1;
+            const x = Math.sin(t * 40) * intensity;
+            const y = Math.cos(t * 35) * intensity;
+            pointer.position.x = x;
+            pointer.position.y = y;
+            pointerCircle.position.x = x;
+            pointerCircle.position.y = y;
+            torus.position.x = x;
+            torus.position.y = y;
+            circle.position.x = x;
+            circle.position.y = y;
+            sticks.forEach((stick, index) => {
+              stick.position.set(
+                Math.cos(angles[index]) * distOfSticks + x,
+                Math.sin(angles[index]) * distOfSticks + y,
+                0
+              );
+            });
+            numberPlane.position.x = x;
+            numberPlane.position.y = y;
+            numberPlane.position.x = radius / 3 + x;
+            numberPlane.position.y = radius / 4 + y;
+            startButton.position.y = startButtonPositionY + y;
+            startButton.position.x = startButtonPositionX + x;
+          } else {
+            pointer.position.x = 0;
+            pointer.position.y = 0;
+            torus.position.x = 0;
+            torus.position.y = 0;
+            circle.position.x = 0;
+            circle.position.y = 0;
+            sticks.forEach((stick, index) => {
+              stick.position.set(
+                Math.cos(angles[index]) * distOfSticks,
+                Math.sin(angles[index]) * distOfSticks,
+                0
+              );
+            });
+            numberPlane.position.x = radius / 3;
+            numberPlane.position.y = radius / 4;
+          }
         }
       }
 
@@ -370,6 +549,22 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
       frameId = requestAnimationFrame(animate);
     };
     frameId = requestAnimationFrame(animate);
+
+    renderer!.domElement.addEventListener("mousedown", (event) => {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const rect = renderer!.domElement.getBoundingClientRect();
+
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects([stopButton]);
+
+      if (intersects.length > 0) {
+        console.log("Start button clicked!");
+      }
+    });
 
     renderer!.domElement.addEventListener("mousedown", (event) =>
       rotateTimer({
