@@ -527,29 +527,24 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     const pressDuration = 0.5; // Total time (go down and go up)
     const pressAmplitude = 0.2; // How much the button go down
     let isRunning = true;
-    let startTime = 0;
-    let pausedTime = 0;
+    let startTime: number | null = null;
+    let pausedTime: number | null = null;
     let clickStart: number | null = null;
 
     const animate = (time: number) => {
       controls.update();
-      if (introAnimStart === null) {
-        introAnimStart = time + introDelay;
+      if (!pausedTime) {
+        pausedTime = time;
       }
-      if (clickStart) {
-        const stillAnimating = clickButtonAnimation({
-          button: startStopButton,
-          amplitude: pressAmplitude,
-          duration: pressDuration,
-          currentTime: time,
-          animationTime: introAnimStart,
-          initPositionX: startStopButtonPositionX,
-          initPositionY: startStopButtonPositionY,
-        });
+      if (!startTime) {
+        startTime = time;
+      }
 
-        if (!stillAnimating) {
-          clickStart = null;
-        }
+      if (introAnimStart === null || clickStart) {
+        introAnimStart =
+          introAnimStart === null
+            ? (clickStart ?? time) + introDelay
+            : (clickStart ?? time);
       }
 
       if (
@@ -566,10 +561,12 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
           initPositionY: startStopButtonPositionY,
         });
       } else if (time >= introAnimStart + pressDuration * 1000) {
+        clickStart = null;
+
         startStopButton.position.y = startStopButtonPositionY;
         startStopButton.position.x = startStopButtonPositionX;
 
-        let elapsed = pausedTime - introAnimStart - pressDuration * 1000;
+        let elapsed = pausedTime - introDelay - pressDuration * 1000;
         if (isRunning) {
           elapsed += time - startTime;
         }
@@ -624,6 +621,8 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
           } else {
             pointer.position.x = 0;
             pointer.position.y = 0;
+            pointerCircle.position.x = 0;
+            pointerCircle.position.y = 0;
             torus.position.x = 0;
             torus.position.y = 0;
             circle.position.x = 0;
@@ -672,7 +671,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         if (isRunning) {
           startTime = performance.now();
         } else {
-          pausedTime += performance.now() - startTime;
+          pausedTime = (pausedTime ?? 0) + performance.now() - (startTime ?? 0);
         }
       }
     });
