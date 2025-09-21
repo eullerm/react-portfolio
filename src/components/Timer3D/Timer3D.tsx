@@ -5,6 +5,29 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const currentSecondsRef = useRef(seconds);
+  let intervalId: number | null = null;
+
+  function startTimer() {
+    const start = performance.now();
+    let lastElapsed = 0;
+    currentSecondsRef.current = seconds;
+
+    intervalId = window.setInterval(() => {
+      const elapsed = Math.floor((performance.now() - start) / 1000);
+      if (elapsed !== lastElapsed) {
+        lastElapsed = elapsed;
+        currentSecondsRef.current = Math.max(seconds - elapsed, 0);
+      }
+    }, 100); // atualiza a cada 100ms
+  }
+
+  function stopTimer() {
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
 
   function DiamondShape({
     maxSize,
@@ -154,6 +177,8 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     const intersects = raycaster.intersectObject(torus);
 
     controls.enableRotate = intersects.length > 0;
+
+    return intersects.length > 0;
   }
 
   function createButton({
@@ -245,6 +270,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     animationTime,
     initPositionX,
     initPositionY,
+    quadrant,
   }: {
     button: THREE.Object3D;
     amplitude: number;
@@ -253,12 +279,20 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     animationTime: number;
     initPositionX: number;
     initPositionY: number;
+    quadrant: 1 | 2 | 3 | 4;
   }) {
     const elapsed = (currentTime - animationTime) / 1000;
     if (elapsed > duration) {
       button.position.set(initPositionX, initPositionY, button.position.z);
       return false;
     }
+
+    const { x, y }: { x: number; y: number } = {
+      1: { x: 1, y: 1 },
+      2: { x: 1, y: -1 },
+      3: { x: -1, y: -1 },
+      4: { x: -1, y: 1 },
+    }[quadrant];
 
     const half = duration / 2;
     let offset = 0;
@@ -272,8 +306,8 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     }
 
     button.position.set(
-      initPositionX + offset,
-      initPositionY + offset,
+      initPositionX + offset * x,
+      initPositionY + offset * y,
       button.position.z
     );
     return true;
@@ -292,13 +326,11 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     camera.lookAt(0, 0, 0);
 
     // Light
-    // Main Light (Key) - luz azul IBM, lateral superior direita
     const mainLight = new THREE.DirectionalLight(0x0f62fe, 1.2);
     mainLight.position.set(5, 8, 10);
     mainLight.castShadow = true;
     scene.add(mainLight);
 
-    // Fill Light - luz neutra, bem fraca, para clarear sombras
     const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
     fillLight.position.set(-5, -2, 5);
     scene.add(fillLight);
@@ -527,20 +559,14 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
     const pressDuration = 0.5; // Total time (go down and go up)
     const pressAmplitude = 0.2; // How much the button go down
     let isRunning = true;
-    let startTime: number | null = null;
-    let pausedTime: number | null = null;
     let clickStart: number | null = null;
+    let isReset: boolean = false;
+    let shouldStartTimer: boolean = true;
 
     const animate = (time: number) => {
       controls.update();
-      if (!pausedTime) {
-        pausedTime = time;
-      }
-      if (!startTime) {
-        startTime = time;
-      }
 
-      if (introAnimStart === null || clickStart) {
+      if (introAnimStart === null || clickStart || isReset) {
         introAnimStart =
           introAnimStart === null
             ? (clickStart ?? time) + introDelay
@@ -551,42 +577,52 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         time > introAnimStart &&
         time < introAnimStart + pressDuration * 1000
       ) {
-        clickButtonAnimation({
-          button: startStopButton,
-          amplitude: pressAmplitude,
-          duration: pressDuration,
-          currentTime: time,
-          animationTime: introAnimStart,
-          initPositionX: startStopButtonPositionX,
-          initPositionY: startStopButtonPositionY,
-        });
+        if (!isReset) {
+          clickButtonAnimation({
+            button: startStopButton,
+            amplitude: pressAmplitude,
+            duration: pressDuration,
+            currentTime: time,
+            animationTime: introAnimStart,
+            initPositionX: startStopButtonPositionX,
+            initPositionY: startStopButtonPositionY,
+            quadrant: 1,
+          });
+        } else if (isReset) {
+          clickButtonAnimation({
+            button: resetButton,
+            amplitude: pressAmplitude,
+            duration: pressDuration,
+            currentTime: time,
+            animationTime: introAnimStart,
+            initPositionX: -resetButtonPositionX,
+            initPositionY: resetButtonPositionY,
+            quadrant: 4,
+          });
+        }
       } else if (time >= introAnimStart + pressDuration * 1000) {
         clickStart = null;
+        isReset = false;
 
-        startStopButton.position.y = startStopButtonPositionY;
-        startStopButton.position.x = startStopButtonPositionX;
-
-        let elapsed = pausedTime - introDelay - pressDuration * 1000;
-        if (isRunning) {
-          elapsed += time - startTime;
+        if (shouldStartTimer) {
+          startTimer();
+          shouldStartTimer = false;
         }
-        elapsed /= 1000;
 
-        // Don't let the timer go below 0
-        let currentSeconds = Math.max(seconds - Math.floor(elapsed), 0);
-
-        let secondsAngle = ((currentSeconds % 60) / 60) * Math.PI * 2;
+        let secondsAngle =
+          ((currentSecondsRef.current % 60) / 60) * Math.PI * 2;
         pointer.rotation.z = secondsAngle;
         numberTexture.needsUpdate = updateNumberCanvas({
-          number: currentSeconds,
+          number: currentSecondsRef.current,
           numberCtx,
           width: numberCanvas.width,
           height: numberCanvas.height,
         });
 
-        if (currentSeconds === 0) {
+        if (currentSecondsRef.current === 0) {
           const t = time / 1000;
-
+          isRunning = false;
+          stopTimer();
           const cycle = Math.floor(t % 4);
 
           if (cycle < 2) {
@@ -669,27 +705,51 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         clickStart = performance.now();
 
         if (isRunning) {
-          startTime = performance.now();
+          startTimer();
         } else {
-          pausedTime = (pausedTime ?? 0) + performance.now() - (startTime ?? 0);
+          stopTimer();
         }
       }
     });
 
-    renderer!.domElement.addEventListener("mousedown", (event) =>
-      rotateTimer({
+    renderer!.domElement.addEventListener("mousedown", (event) => {
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+      const rect = renderer!.domElement.getBoundingClientRect();
+
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects([resetButton]);
+
+      if (intersects.length > 0) {
+        isRunning = true;
+        introAnimStart = null;
+        clickStart = performance.now();
+        isReset = true;
+        stopTimer();
+        shouldStartTimer = true;
+      }
+    });
+
+    renderer!.domElement.addEventListener("mousedown", (event) => {
+      const isRotating = rotateTimer({
         event,
         torus,
         controls,
         renderer,
         camera,
-      })
-    );
+      });
+      if (isRotating) {
+        renderer!.domElement.style.cursor = "grabbing";
+      }
+    });
 
     renderer!.domElement.addEventListener("mousemove", (event) => {
       const isOverButton = overButtons({
         event,
-        buttons: [resetButton, switchModeButton, startStopButton],
+        buttons: [resetButton, startStopButton],
         renderer,
         camera,
       });
@@ -701,11 +761,20 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
         camera,
       });
 
+      const isOverSpecialButton = overButtons({
+        event,
+        buttons: [switchModeButton],
+        renderer,
+        camera,
+      });
+
       if (isOverButton) {
         renderer!.domElement.style.cursor = "pointer";
       } else if (isOverTimer) {
-        renderer!.domElement.style.cursor = "pointer";
+        renderer!.domElement.style.cursor = "grab";
         controls.enableRotate = true;
+      } else if (isOverSpecialButton) {
+        renderer!.domElement.style.cursor = "alias";
       } else {
         renderer!.domElement.style.cursor = "default";
         controls.enableRotate = false;
@@ -755,7 +824,7 @@ const Timer3D: React.FC<{ seconds: number }> = ({ seconds }) => {
 
       scene.clear();
       controls.dispose();
-
+      stopTimer();
       if (mountRef.current?.contains(renderer.domElement)) {
         mountRef.current.removeChild(renderer.domElement);
       }
