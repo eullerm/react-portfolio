@@ -14,14 +14,9 @@ const homeRoute = createRoute({
   component: Home,
 });
 
-const notFoundRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "*",
-  component: NotFound,
-});
-
-const routeTree = rootRoute.addChildren([homeRoute, notFoundRoute]);
+const routeTree = rootRoute.addChildren([homeRoute]);
 
 export const router = createRouter({
   routeTree,
+  defaultNotFoundComponent: NotFound,
 });
