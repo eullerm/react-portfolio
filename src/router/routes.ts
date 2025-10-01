@@ -10,7 +10,7 @@ const rootRoute = createRootRoute();
 
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/react-portfolio/",
+  path: "/react-portfolio",
   component: Home,
 });
 
