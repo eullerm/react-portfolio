@@ -20,7 +20,7 @@ const homeRoute = createRoute({
 
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/*",
+  path: "*",
   component: NotFound,
 });
 
