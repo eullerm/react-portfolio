@@ -4,18 +4,23 @@ import Lottie from "lottie-react";
 import spaceData from "../assets/lottie/space.json";
 import astronautData from "../assets/lottie/astronaut.json";
 import notFoundData from "../assets/lottie/404.json";
+import { useLanguage } from "../translation/LanguageContext";
+import { t } from "../translation/helper";
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 100%;
-  width: 100%;
+  height: 100vh;
+  width: 100vw;
+  top: 0;
+  left: 0;
   text-align: center;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.textPrimary};
   overflow: hidden;
+  position: absolute;
 `;
 
 const Title = styled.h1`
@@ -42,14 +47,15 @@ const HomeLink = styled.a`
 `;
 
 const NotFound: React.FC = () => {
+  const { language } = useLanguage();
   return (
     <Wrapper>
       <Lottie
         animationData={spaceData}
         loop={true}
         style={{
-          width: "100%",
-          height: "auto",
+          width: "max-content",
+          height: "100%",
           maxHeight: "100%",
           objectFit: "fill",
           position: "absolute",
@@ -83,8 +89,8 @@ const NotFound: React.FC = () => {
         <Title>
           <Lottie animationData={notFoundData} loop={true} />
         </Title>
-        <Message>Desculpe, não encontramos nada aqui.</Message>
-        <HomeLink href="/react-portfolio">Voltar para Home</HomeLink>
+        <Message>{t("notFound", language)}</Message>
+        <HomeLink href="/react-portfolio">{t("backHome", language)}</HomeLink>
       </div>
     </Wrapper>
   );

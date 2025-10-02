@@ -12,6 +12,7 @@ const Container = styled.div`
   min-height: 100vh;
   width: 100vw;
   display: flex;
+  overflow: hidden;
   flex-direction: column;
   transition: all 0.5s ease-in-out;
   margin: 0 auto;
